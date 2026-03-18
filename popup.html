@@ -162,118 +162,6 @@
       transform: translateX(16px);
     }
 
-    /* ── Shortcut remapper ── */
-    .shortcut-box {
-      background: #1e1e2e;
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .shortcut-keys {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .mod-group {
-      display: flex;
-      gap: 4px;
-    }
-
-    .mod-btn {
-      background: #313244;
-      border: 1px solid #45475a;
-      border-radius: 6px;
-      color: #a6adc8;
-      font-size: 11px;
-      padding: 4px 8px;
-      cursor: pointer;
-      transition: all 0.15s;
-      user-select: none;
-    }
-
-    .mod-btn.active {
-      background: #89b4fa;
-      border-color: #89b4fa;
-      color: #11111b;
-    }
-
-    .plus {
-      color: #6c7086;
-      font-size: 12px;
-    }
-
-    .key-input {
-      background: #313244;
-      border: 1px solid #45475a;
-      border-radius: 6px;
-      color: #cdd6f4;
-      font-size: 12px;
-      padding: 4px 8px;
-      width: 44px;
-      text-align: center;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .key-input:focus {
-      border-color: #89b4fa;
-    }
-
-    .key-input.capturing {
-      border-color: #f38ba8;
-      color: #f38ba8;
-    }
-
-    .shortcut-actions {
-      display: flex;
-      gap: 6px;
-    }
-
-    .btn-sm {
-      flex: 1;
-      padding: 6px 0;
-      border-radius: 6px;
-      border: none;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .btn-sm:hover {
-      opacity: 0.85;
-    }
-
-    .btn-save {
-      background: #89b4fa;
-      color: #11111b;
-    }
-
-    .btn-reset {
-      background: #313244;
-      color: #a6adc8;
-    }
-
-    .shortcut-preview {
-      font-size: 11px;
-      color: #6c7086;
-      text-align: center;
-      min-height: 16px;
-    }
-
-    .shortcut-preview.ok {
-      color: #a6e3a1;
-    }
-
-    .shortcut-preview.err {
-      color: #f38ba8;
-    }
-
     /* ── Status / chips ── */
     .chips {
       display: flex;
@@ -359,36 +247,13 @@
       <p class="section-title">Aparência</p>
       <div class="setting-row">
         <div>
-          <div class="label">Injeção por flutuante</div>
+          <div class="label">Botão flutuante</div>
           <div class="sub">Exibe o botão de preenchimento na página</div>
         </div>
         <label class="toggle">
           <input type="checkbox" id="toggleFloat" checked />
           <span class="slider"></span>
         </label>
-      </div>
-    </div>
-
-    <hr class="divider" />
-
-    <!-- Remapeamento de atalho -->
-    <div>
-      <p class="section-title">Atalho de teclado</p>
-      <div class="shortcut-box">
-        <div class="shortcut-keys">
-          <div class="mod-group">
-            <button class="mod-btn" id="modCtrl">Ctrl</button>
-            <button class="mod-btn" id="modAlt">Alt</button>
-            <button class="mod-btn" id="modShift">Shift</button>
-          </div>
-          <span class="plus">+</span>
-          <input class="key-input" id="keyInput" maxlength="1" placeholder="F" readonly />
-        </div>
-        <div class="shortcut-preview" id="shortcutPreview">Clique na tecla para capturar</div>
-        <div class="shortcut-actions">
-          <button class="btn-sm btn-save" id="saveShortcut">Salvar</button>
-          <button class="btn-sm btn-reset" id="resetShortcut">Restaurar padrão</button>
-        </div>
       </div>
     </div>
 

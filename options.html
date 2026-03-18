@@ -129,6 +129,33 @@
     }
     #addCategoryForm.active {
       display: block;
+      animation: slideUpFade 0.25s ease-out forwards;
+    }
+
+    /* ── Shortcut CSS ── */
+    .shortcut-box { display: flex; flex-direction: column; gap: 8px; }
+    .shortcut-keys { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .mod-group { display: flex; gap: 4px; }
+    .mod-btn { background: #313244; border: 1px solid #45475a; border-radius: 6px; color: #a6adc8; font-size: 11px; padding: 6px 10px; cursor: pointer; transition: all 0.15s; user-select: none; }
+    .mod-btn.active { background: #89b4fa; border-color: #89b4fa; color: #11111b; }
+    .plus { color: #6c7086; font-size: 12px; }
+    .key-input { background: #313244; border: 1px solid #45475a; border-radius: 6px; color: #cdd6f4; font-size: 12px; padding: 6px 10px; width: 44px; text-align: center; outline: none; transition: border-color 0.15s; }
+    .key-input:focus { border-color: #89b4fa; }
+    .key-input.capturing { border-color: #f38ba8; color: #f38ba8; }
+    .shortcut-actions { display: flex; gap: 6px; margin-top: 4px; }
+    .btn-sm { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .btn-sm:hover { opacity: 0.85; }
+    .btn-save { background: #89b4fa; color: #11111b; }
+    .btn-reset { background: #313244; color: #a6adc8; }
+    .shortcut-preview { font-size: 12px; color: #a6adc8; min-height: 16px; margin-bottom: 4px; }
+    .shortcut-preview.ok { color: #a6e3a1; }
+    .shortcut-preview.err { color: #f38ba8; }
+
+    /* Animations */
+    .card { animation: slideUpFade 0.25s ease-out forwards; }
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -138,10 +165,33 @@
     <h1>Configurações Customizadas</h1>
     <p class="subtitle">Adicione categorias próprias para preenchimento de campos específicos.</p>
 
+    <div class="card" id="shortcutSection">
+      <h2 style="margin-bottom:12px;">Atalho de Teclado Global</h2>
+      <div class="shortcut-box">
+        <div class="shortcut-preview" id="shortcutPreview">Clique na tecla para capturar e altere os botões abaixo</div>
+        <div class="shortcut-keys">
+          <div class="mod-group">
+            <button class="mod-btn" id="modCtrl">Ctrl</button>
+            <button class="mod-btn" id="modAlt">Alt</button>
+            <button class="mod-btn" id="modShift">Shift</button>
+          </div>
+          <span class="plus">+</span>
+          <input class="key-input" id="keyInput" maxlength="1" placeholder="F" readonly />
+        </div>
+        <div class="shortcut-actions">
+          <button class="btn-sm btn-save" id="saveShortcut">Salvar Atalho</button>
+          <button class="btn-sm btn-reset" id="resetShortcut">Restaurar Original</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card" id="listSection">
       <div class="list-header">
         <h2>Suas Categorias</h2>
-        <button class="btn" id="showAddBtn">Nova Categoria</button>
+        <div style="display:flex;gap:10px;">
+          <button class="btn" style="background:#45475a;color:#cdd6f4;" id="restoreBtn">Restaurar Padrões</button>
+          <button class="btn" id="showAddBtn">Nova Categoria</button>
+        </div>
       </div>
       <div class="category-list" id="categoryList">
         <!-- JS injeta categorias aqui -->

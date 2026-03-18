@@ -577,7 +577,9 @@
   function applyFloatVisibility() {
     const btn = document.getElementById("__mockfiller_btn");
     if (!btn) return;
-    btn.style.display = SETTINGS.floatVisible ? "flex" : "none";
+    btn.style.opacity = SETTINGS.floatVisible ? "1" : "0";
+    btn.style.transform = SETTINGS.floatVisible ? "scale(1)" : "scale(0.8) translateY(10px)";
+    btn.style.pointerEvents = SETTINGS.floatVisible ? "auto" : "none";
   }
 
   // ─── TOAST ────────────────────────────────────────────────────────────────
