@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Tá Preenchido",
+  "version": "1.0.0",
+  "description": "Preenche formulários com dados brasileiros mocados para testes de desenvolvimento.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://brasilapi.com.br/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tá Preenchido"
+  },
+  "commands": {
+    "fill-mock-data": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
+      },
+      "description": "Preencher dados mocados"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

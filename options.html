@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Opções - Tá Preenchido</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #11111b;
+      color: #cdd6f4;
+      padding: 40px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: #a6adc8;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cdd6f4;
+      margin-bottom: 6px;
+    }
+    
+    .form-group input, .form-group textarea {
+      width: 100%;
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 6px;
+      padding: 10px;
+      color: #cdd6f4;
+      font-family: inherit;
+    }
+    
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #89b4fa;
+    }
+    
+    .form-group .help-text {
+      font-size: 11px;
+      color: #a6adc8;
+      margin-top: 4px;
+    }
+    
+    .btn {
+      background: #89b4fa;
+      color: #11111b;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-danger {
+      background: #f38ba8;
+      color: #11111b;
+    }
+    
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .category-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #313244;
+      padding: 12px 16px;
+      border-radius: 6px;
+    }
+    
+    .category-item h3 {
+      font-size: 14px;
+      color: #cdd6f4;
+    }
+    
+    .category-item p {
+      font-size: 12px;
+      color: #a6adc8;
+    }
+    
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .list-header h2 {
+      font-size: 18px;
+    }
+
+    #addCategoryForm {
+      display: none;
+    }
+    #addCategoryForm.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Configurações Customizadas</h1>
+    <p class="subtitle">Adicione categorias próprias para preenchimento de campos específicos.</p>
+
+    <div class="card" id="listSection">
+      <div class="list-header">
+        <h2>Suas Categorias</h2>
+        <button class="btn" id="showAddBtn">Nova Categoria</button>
+      </div>
+      <div class="category-list" id="categoryList">
+        <!-- JS injeta categorias aqui -->
+      </div>
+    </div>
+
+    <div class="card" id="addCategoryForm">
+      <h2 style="margin-bottom:16px;" id="formTitle">Nova Categoria</h2>
+      
+      <input type="hidden" id="catId" />
+
+      <div class="form-group">
+        <label for="catName">Nome da Categoria</label>
+        <input type="text" id="catName" placeholder="Ex: Cargo ou Profissão" />
+      </div>
+
+      <div class="form-group">
+        <label for="catIdentifiers">Identificadores do Campo (Ex: name, class, id ou placeholder)</label>
+        <input type="text" id="catIdentifiers" placeholder="Ex: cargo, occupation, profissao, role" />
+        <div class="help-text">Palavras separadas por vírgula que a extensão vai procurar na página.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="catValues">Valores para Preencher</label>
+        <textarea id="catValues" rows="4" placeholder="Ex: Desenvolvedor, Analista de Sistemas, Engenheiro"></textarea>
+        <div class="help-text">Palavras separadas por vírgula da qual uma será escolhida aleatoriamente.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn" id="saveBtn">Salvar</button>
+        <button class="btn" style="background:#45475a;color:#cdd6f4;" id="cancelBtn">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Tá Preenchido</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 300px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f0f17;
+      color: #cdd6f4;
+    }
+
+    .header {
+      background: #1e1e2e;
+      border-bottom: 1px solid #313244;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header .icon {
+      font-size: 24px;
+    }
+
+    .header-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header-text p {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.75);
+      margin-top: 1px;
+    }
+
+    .body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-fill {
+      width: 100%;
+      padding: 12px;
+      background: #89b4fa;
+      color: #11111b;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+
+    .btn-fill:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-fill:active {
+      transform: translateY(0);
+    }
+
+    .btn-fill:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #1e1e2e;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6c7086;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ── Toggle ── */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1e1e2e;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .setting-row .label {
+      font-size: 13px;
+      color: #cdd6f4;
+    }
+
+    .setting-row .sub {
+      font-size: 11px;
+      color: #6c7086;
+      margin-top: 2px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #313244;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .slider:before {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      left: 3px;
+      top: 3px;
+      transition: transform 0.2s;
+    }
+
+    .toggle input:checked+.slider {
+      background: #89b4fa;
+    }
+
+    .toggle input:checked+.slider:before {
+      transform: translateX(16px);
+    }
+
+    /* ── Shortcut remapper ── */
+    .shortcut-box {
+      background: #1e1e2e;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .shortcut-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .mod-group {
+      display: flex;
+      gap: 4px;
+    }
+
+    .mod-btn {
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 6px;
+      color: #a6adc8;
+      font-size: 11px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .mod-btn.active {
+      background: #89b4fa;
+      border-color: #89b4fa;
+      color: #11111b;
+    }
+
+    .plus {
+      color: #6c7086;
+      font-size: 12px;
+    }
+
+    .key-input {
+      background: #313244;
+      border: 1px solid #45475a;
+      border-radius: 6px;
+      color: #cdd6f4;
+      font-size: 12px;
+      padding: 4px 8px;
+      width: 44px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .key-input:focus {
+      border-color: #89b4fa;
+    }
+
+    .key-input.capturing {
+      border-color: #f38ba8;
+      color: #f38ba8;
+    }
+
+    .shortcut-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-sm {
+      flex: 1;
+      padding: 6px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-sm:hover {
+      opacity: 0.85;
+    }
+
+    .btn-save {
+      background: #89b4fa;
+      color: #11111b;
+    }
+
+    .btn-reset {
+      background: #313244;
+      color: #a6adc8;
+    }
+
+    .shortcut-preview {
+      font-size: 11px;
+      color: #6c7086;
+      text-align: center;
+      min-height: 16px;
+    }
+
+    .shortcut-preview.ok {
+      color: #a6e3a1;
+    }
+
+    .shortcut-preview.err {
+      color: #f38ba8;
+    }
+
+    /* ── Status / chips ── */
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .chip {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 20px;
+      padding: 3px 9px;
+      font-size: 11px;
+      color: #a6adc8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .chip .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #a6e3a1;
+    }
+
+    .status {
+      background: #1e1e2e;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #a6adc8;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .footer {
+      padding: 0 14px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: center;
+      font-size: 9px;
+      color: #45475a;
+    }
+
+    .btn-options {
+      background: none;
+      border: 1px solid #313244;
+      color: #a6adc8;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-options:hover {
+      background: #313244;
+      color: #cdd6f4;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="header-text">
+      <h1>Tá Preenchido</h1>
+      <p>Dados brasileiros para testes</p>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- Botão principal -->
+    <button class="btn-fill" id="fillBtn">Preencher formulário</button>
+
+    <hr class="divider" />
+
+    <!-- Botão flutuante toggle -->
+    <div>
+      <p class="section-title">Aparência</p>
+      <div class="setting-row">
+        <div>
+          <div class="label">Injeção por flutuante</div>
+          <div class="sub">Exibe o botão de preenchimento na página</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="toggleFloat" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Remapeamento de atalho -->
+    <div>
+      <p class="section-title">Atalho de teclado</p>
+      <div class="shortcut-box">
+        <div class="shortcut-keys">
+          <div class="mod-group">
+            <button class="mod-btn" id="modCtrl">Ctrl</button>
+            <button class="mod-btn" id="modAlt">Alt</button>
+            <button class="mod-btn" id="modShift">Shift</button>
+          </div>
+          <span class="plus">+</span>
+          <input class="key-input" id="keyInput" maxlength="1" placeholder="F" readonly />
+        </div>
+        <div class="shortcut-preview" id="shortcutPreview">Clique na tecla para capturar</div>
+        <div class="shortcut-actions">
+          <button class="btn-sm btn-save" id="saveShortcut">Salvar</button>
+          <button class="btn-sm btn-reset" id="resetShortcut">Restaurar padrão</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Dados incluídos -->
+    <div>
+      <p class="section-title">
+        Dados ativos
+        <button class="btn-options" id="optionsBtn">Personalizar</button>
+      </p>
+      <div class="chips">
+        <div class="chip"><span class="dot"></span>Nome</div>
+        <div class="chip"><span class="dot"></span>E-mail</div>
+        <div class="chip"><span class="dot"></span>Telefone</div>
+        <div class="chip"><span class="dot"></span>CPF</div>
+        <div class="chip"><span class="dot"></span>CNPJ</div>
+        <div class="chip"><span class="dot"></span>Endereço</div>
+        <div class="chip"><span class="dot"></span>CEP real</div>
+        <div class="chip"><span class="dot"></span>Cartão</div>
+        <div class="chip"><span class="dot"></span>Data nasc.</div>
+        <div class="chip"><span class="dot"></span>Senha</div>
+      </div>
+    </div>
+
+    <div class="status" id="status">
+      Pronto para uso. Pressione o botão ou utilize o atalho.
+    </div>
+
+  </div>
+
+  <div class="footer">Tá Preenchido v1.2</div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
