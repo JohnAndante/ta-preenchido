@@ -1,3 +1,5 @@
+<img width="888" height="307" alt="Novo Projeto" src="https://github.com/user-attachments/assets/ed54b3e3-3e10-4006-beea-14cc3a2f2fc8" />
+
 # Tá Preenchido
 
 Uma extensão de Chrome pra preencher formulários web automaticamente com dados fictícios. Fizemos isso pra quem testa software e já não aguenta mais digitar "Teste Silva" e ficar buscando gerador de CPF no Google toda vez.
