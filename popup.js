@@ -13,14 +13,18 @@ if (toggleFloat) {
     const visible = e.target.checked;
     await chrome.storage.local.set({ floatVisible: visible });
 
-    // Notifica a tab ativa
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab) {
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (v) => { if (window.__mockFillerSetFloat) window.__mockFillerSetFloat(v); },
-        args: [visible],
-      });
+    // Notifica a tab ativa, se possível
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: (v) => { if (window.__mockFillerSetFloat) window.__mockFillerSetFloat(v); },
+          args: [visible],
+        });
+      }
+    } catch (err) {
+      // Ignora erro call on restricted pages like chrome:// ou Web Store
     }
   });
 }

@@ -252,6 +252,82 @@
       color: #f38ba8;
     }
 
+    /* Modal CSS */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-content h2 {
+      margin-bottom: 16px;
+      font-size: 20px;
+      color: #cdd6f4;
+    }
+
+    .modal-body {
+      font-size: 14px;
+      color: #a6adc8;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .modal-body p {
+      margin-bottom: 12px;
+    }
+
+    .modal-body strong {
+      color: #89b4fa;
+      font-weight: 600;
+    }
+
+    .btn-link {
+      background: none;
+      border: none;
+      color: #89b4fa;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      margin-top: 8px;
+    }
+
+    .btn-link:hover {
+      color: #b4befe;
+    }
+
     /* Animations */
     .card {
       animation: slideUpFade 0.25s ease-out forwards;
@@ -273,17 +349,19 @@
 
 <body>
   <div class="container">
-    <h1>Configurações Customizadas</h1>
-    <p class="subtitle">Adicione categorias próprias para preenchimento de campos específicos.</p>
+    <h1>Suas Configurações</h1>
+    <p class="subtitle">Ajuste o comportamento da extensão ou crie suas próprias regras de testes.</p>
 
     <div class="card" id="generalSettingsSection">
-      <h2 style="margin-bottom:12px;">Configurações Gerais</h2>
+      <h2 style="margin-bottom:12px;">Geral</h2>
       <div style="display: flex; align-items: flex-start; gap: 10px;">
         <input type="checkbox" id="useBrasilAPI" style="width: auto; margin-top: 4px;" checked>
         <div>
-          <label for="useBrasilAPI" style="margin-bottom: 2px; cursor: pointer; color: #cdd6f4;">Usar BrasilAPI para
-            endereços reais</label>
-          <div class="help-text" style="margin-top: 0;">Se desmarcado, campos de endereço e CEP serão preenchidos com
+          <label for="useBrasilAPI"
+            style="margin-bottom: 2px; cursor: pointer; color: #cdd6f4; font-size: 14px; font-weight: 600;">Usar
+            BrasilAPI para endereços reais
+          </label>
+          <div class="help-text" style="margin-top: 2px;">Se desmarcado, campos de endereço e CEP serão preenchidos com
             dados falsos gerados localmente.</div>
         </div>
       </div>
@@ -351,7 +429,26 @@
     </div>
 
     <div style="text-align: center; margin-top: 40px; padding-bottom: 20px; font-size: 13px; color: #6c7086;">
-      <p>Desenvolvido por <strong><a href="https://github.com/johnandante">JohnAndante</a></strong></p>
+      <p>Desenvolvido por <strong><a href="https://github.com/johnandante"
+            style="color:#89b4fa;text-decoration:none;">JohnAndante</a></strong></p>
+      <button class="btn-link" id="openDisclaimerBtn">Termos & Aviso Legal</button>
+    </div>
+  </div>
+
+  <div id="disclaimerModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>Aviso Legal & Privacidade</h2>
+      <div class="modal-body">
+        <p><strong>Offline & Seguro:</strong> Todo o preenchimento de dados e senhas roda exclusivamente no seu
+          navegador. A extensão não rastreia, não vigia e não salva absolutamente nada na nuvem.</p>
+        <p><strong>Acesso à Rede:</strong> A única infraestrutura externa acessada é a <code>BrasilAPI</code> (se não
+          estiver desativada nas configurações), usada unicamente para resolver endereços reais a partir de CEPs.</p>
+        <p><strong>Dados Fictícios:</strong> Nossos geradores de CPF, CNPJ e Cartões de Crédito criam números virtuais
+          usando os cálculos matemáticos oficiais (módulo 11, algoritmo de Luhn) puramente para você testar seus
+          formulários num ambiente de desenvolvimento. Eles não têm validade e não existem.</p>
+        <p>A responsabilidade do uso final desses dados e da extensão é inteiramente sua. Bom código!</p>
+      </div>
+      <button class="btn" style="width: 100%;" id="closeDisclaimerBtn">Entendi, valeu</button>
     </div>
   </div>
 

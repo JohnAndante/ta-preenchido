@@ -209,9 +209,17 @@ document.getElementById("showAddBtn").addEventListener("click", () => {
 
 document.getElementById("restoreBtn").addEventListener("click", () => {
   if (confirm("Isso apagará todas as suas modificações atuais e voltará para as categorias iniciais da extensão! Deseja continuar?")) {
-    categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+    categories = [...DEFAULT_CATEGORIES];
     saveCategories();
   }
+});
+
+// Modal Disclaimer
+const modal = document.getElementById("disclaimerModal");
+document.getElementById("openDisclaimerBtn")?.addEventListener("click", () => modal.classList.add("active"));
+document.getElementById("closeDisclaimerBtn")?.addEventListener("click", () => modal.classList.remove("active"));
+modal?.addEventListener("click", (e) => {
+  if (e.target === modal) modal.classList.remove("active");
 });
 
 document.getElementById("cancelBtn").addEventListener("click", () => {

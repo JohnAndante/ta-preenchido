@@ -508,8 +508,8 @@
           if (!radiosPicked.has(el.name)) {
             const group = Array.from(document.querySelectorAll(`input[type="radio"][name="${CSS.escape(el.name)}"]`)).filter(isVisible);
             if (group.length > 0) {
-               const picked = group[randInt(0, group.length - 1)];
-               if (el === picked) { v = true; radiosPicked.add(el.name); } else { v = false; }
+              const picked = group[randInt(0, group.length - 1)];
+              if (el === picked) { v = true; radiosPicked.add(el.name); } else { v = false; }
             } else { v = true; radiosPicked.add(el.name); }
           } else { v = false; }
         } else {
@@ -519,8 +519,8 @@
       else if (el.tagName === "SELECT") {
         const valids = Array.from(el.options).filter(o => !o.disabled && o.value !== "");
         if (valids.length > 0) {
-            const picked = valids[randInt(0, valids.length - 1)];
-            v = picked.value;
+          const picked = valids[randInt(0, valids.length - 1)];
+          v = picked.value;
         }
       }
       else if (el.tagName === "TEXTAREA" && match(info, "obs", "observ", "mensagem", "message", "descri", "nota", "comment"))
