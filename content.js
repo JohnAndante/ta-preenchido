@@ -230,12 +230,24 @@
     } catch (_) { }
     const pl = el.closest("label");
     if (pl) lbl += " " + pl.textContent.toLowerCase();
-    return attrs + " " + lbl;
+
+    let text = attrs + " " + lbl;
+    
+    // Proteção: Remove domínios de e-mails de exemplo nos placeholders para não disparar 'empresa'
+    text = text.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, " email ");
+    text = text.replace(/https?:\/\/[a-z0-9.-]+/gi, " url ");
+    
+    return text;
   }
 
   function match(info) {
-    for (let i = 1; i < arguments.length; i++)
-      if (info.indexOf(arguments[i]) !== -1) return true;
+    for (let i = 1; i < arguments.length; i++) {
+       const term = arguments[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escapa regex
+       // Expressão regular avançada: procura o termo como palavra inteira,
+       // respeitando acentos brasileiros e camelCase/snake_case delimitadores usuais.
+       const regex = new RegExp('(^|[^a-z0-9áéíóúâêîôûãõç])' + term + '([^a-z0-9áéíóúâêîôûãõç]|$)', 'i');
+       if (regex.test(info)) return true;
+    }
     return false;
   }
 
