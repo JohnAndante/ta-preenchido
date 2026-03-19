@@ -17,7 +17,19 @@
     estados: [
       { nome: "São Paulo", uf: "SP" }, { nome: "Rio de Janeiro", uf: "RJ" },
       { nome: "Paraná", uf: "PR" }, { nome: "Minas Gerais", uf: "MG" },
-      { nome: "Rio Grande do Sul", uf: "RS" }, { nome: "Bahia", uf: "BA" }
+      { nome: "Rio Grande do Sul", uf: "RS" }, { nome: "Bahia", uf: "BA" },
+      { nome: "Amazonas", uf: "AM" }, { nome: "Pará", uf: "PA" },
+      { nome: "Mato Grosso", uf: "MT" }, { nome: "Mato Grosso do Sul", uf: "MS" },
+      { nome: "Rondônia", uf: "RO" }, { nome: "Roraima", uf: "RR" },
+      { nome: "Acre", uf: "AC" }, { nome: "Amapá", uf: "AP" },
+      { nome: "Tocantins", uf: "TO" }, { nome: "Piauí", uf: "PI" },
+      { nome: "Maranhão", uf: "MA" }, { nome: "Ceará", uf: "CE" },
+      { nome: "Rio Grande do Norte", uf: "RN" }, { nome: "Paraíba", uf: "PB" },
+      { nome: "Pernambuco", uf: "PE" }, { nome: "Alagoas", uf: "AL" },
+      { nome: "Sergipe", uf: "SE" }, { nome: "Espírito Santo", uf: "ES" },
+      { nome: "Distrito Federal", uf: "DF" }, { nome: "Goiás", uf: "GO" },
+      { nome: "Santa Catarina", uf: "SC" }, { nome: "Rio Grande do Sul", uf: "RS" },
+      { nome: "Rio Grande do Sul", uf: "RS" }, { nome: "Rio Grande do Sul", uf: "RS" },
     ],
     ddds: ["11", "21", "41", "31", "51", "85", "71", "81", "92", "62", "48", "27", "98", "83", "84"],
     dominios: ["gmail.com", "hotmail.com", "yahoo.com.br", "outlook.com", "teste.com.br"],
@@ -25,18 +37,17 @@
       { nome: "Visa", prefix: "4", length: 16 },
       { nome: "Mastercard", prefix: "5", length: 16 },
       { nome: "Amex", prefix: "37", length: 15 },
+      { nome: "Diners Club", prefix: "36", length: 14 },
     ],
   };
 
   const CEPS_REAIS = [
     "01310100", "01001000", "04538133",
     "22250040", "20040020", "22071060",
-    "80010010", "80250210", "87013190", "85851010",
-    "30130110", "30140071",
-    "90010000", "90470340",
-    "40020010", "41820021",
-    "60135210", "60175047",
-    "50010010", "51021530",
+    "80010010", "80250210", "87013190",
+    "85851010", "30130110", "30140071",
+    "90010000", "90470340", "40020010",
+    "60135210", "60175047", "50010010",
     "69010060", "74110010",
   ];
 
@@ -86,12 +97,12 @@
     const part2 = String(randInt(1000, 9999));
     const digits = ddd + part1 + part2; // 11 dígitos
     return [
-      "(" + ddd + ") " + part1 + "-" + part2,             // (85) 91234-5678
-      ddd + part1 + part2,                                 // 85912345678 — só dígitos
-      "+55 (" + ddd + ") " + part1 + "-" + part2,         // +55 (85) 91234-5678
-      "+55" + ddd + part1 + part2,                         // +5585912345678
-      ddd + " " + part1 + "-" + part2,                     // 85 91234-5678
-      "55" + ddd + part1 + part2,                          // 5585912345678
+      "(" + ddd + ") " + part1 + "-" + part2,       // (85) 91234-5678
+      ddd + part1 + part2,                          // 85912345678 — só dígitos
+      "+55 (" + ddd + ") " + part1 + "-" + part2,   // +55 (85) 91234-5678
+      "+55" + ddd + part1 + part2,                  // +5585912345678
+      ddd + " " + part1 + "-" + part2,              // 85 91234-5678
+      "55" + ddd + part1 + part2,                   // 5585912345678
     ];
   }
 
@@ -125,8 +136,8 @@
     // cepStr já vem do buscarCepReal ou do fallback — ex: "01310-100"
     const raw = onlyDigits(cepStr);
     return [
-      cepStr,                          // 01310-100
-      raw,                             // 01310100
+      cepStr, // 01310-100
+      raw,    // 01310100
     ];
   }
 
@@ -168,7 +179,7 @@
     const cvv = String(randInt(b.length === 15 ? 1000 : 100, b.length === 15 ? 9999 : 999));
     const nome = gerarNome().toUpperCase();
     return {
-      numero: [spaced, raw, dashed],             // variantes do número
+      numero: [spaced, raw, dashed], // variantes do número
       validade: [mm + "/" + yyyy, mm + "/" + yy, mm + yy, mm + "-" + yy], // variantes da validade
       cvv: [cvv],
       nome: [nome],
@@ -183,14 +194,13 @@
       const res = await fetch("https://brasilapi.com.br/api/cep/v2/" + cep, {
         signal: AbortSignal.timeout(5000),
       });
-      if (!res.ok) throw new Error("falha");
       const d = await res.json();
       return {
         cep: d.cep || "", logradouro: d.street || "",
         bairro: d.neighborhood || "", cidade: d.city || "", estado: d.state || "",
         fromApi: true,
       };
-    } catch (_) {
+    } catch (e) {
       const estado = rand(DATA.estados);
       return {
         cep: randInt(10000, 99999) + "-" + randInt(100, 999),
@@ -229,6 +239,14 @@
   // ─── DISPATCH ─────────────────────────────────────────────────────────────
 
   function dispatchEvents(el, value) {
+    if (el.type === "checkbox" || el.type === "radio") {
+      const p = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "checked");
+      const setter = p ? p.set : undefined;
+      if (setter) setter.call(el, value); else el.checked = value;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
+    }
     const proto = el.tagName === "SELECT" ? window.HTMLSelectElement.prototype
       : el.tagName === "TEXTAREA" ? window.HTMLTextAreaElement.prototype
         : window.HTMLInputElement.prototype;
@@ -259,12 +277,12 @@
 
     // 3. Classes de erro no próprio input
     const inputErrorClasses = [
-      "is-invalid",           // Bootstrap
-      "ant-input-status-error", // Ant Design
+      "is-invalid",               // Bootstrap
+      "ant-input-status-error",   // Ant Design
       "error", "input-error",
       "field-error", "has-error",
-      "ng-invalid",           // Angular
-      "v-input--error",       // Vuetify
+      "ng-invalid",               // Angular
+      "v-input--error",           // Vuetify
     ];
     if (inputErrorClasses.some(c => el.classList.contains(c))) return true;
 
@@ -360,22 +378,6 @@
     };
   }
 
-  // Classifica o campo e retorna a chave do variantMap
-  function classifyField(el, info, type) {
-    if (match(info, "cnpj")) return "cnpj";
-    if (match(info, "cpf")) return "cpf";
-    if (match(info, "cep", "zipcode", "zip_code", "postal")) return "cep";
-    if (match(info, "nascimento", "birth", "dob", "data_nasc") || type === "date") return "data";
-    if (match(info, "fone", "phone", "celular", "whatsapp", "telefone", "tel", "mobile") || type === "tel") return "telefone";
-    if (match(info, "email", "e-mail", "mail") || type === "email") return "email";
-    if (match(info, "card_number", "cardnumber", "numero_cartao", "card-number", "pan")) return "cartao_numero";
-    if (match(info, "expiry", "validade", "expiracao", "expiração", "exp_date", "vencimento")) return "cartao_validade";
-    if (match(info, "cvv", "cvc", "csc", "security_code", "cod_seguranca")) return "cartao_cvv";
-    if (match(info, "card_name", "cardholder", "titular", "nome_cartao")) return "cartao_nome";
-    if (match(info, "numero", "número") && !match(info, "phone", "tel", "cpf", "cartao", "card")) return "numero";
-    return null;
-  }
-
   // ─── PREENCHIMENTO PRINCIPAL ──────────────────────────────────────────────
 
   async function fillForms() {
@@ -390,7 +392,7 @@
 
     const sel = [
       "input:not([type=hidden]):not([type=submit]):not([type=button])",
-      ":not([type=reset]):not([type=checkbox]):not([type=radio])",
+      ":not([type=reset])",
       ":not([disabled]):not([readonly])",
       ", textarea:not([disabled]):not([readonly])",
       ", select:not([disabled])",
@@ -423,6 +425,7 @@
     // Guarda: el → { fieldKey, variantIndex }  para o retry
     const filledFields = [];
     let filled = 0;
+    const radiosPicked = new Set();
 
     document.querySelectorAll(sel).forEach(function (el) {
       if (!isVisible(el)) return;
@@ -490,7 +493,33 @@
       else if (match(info, "cvv", "cvc", "csc", "security_code", "cod_seguranca")) { v = cartaoV.cvv[0]; fieldKey = "cartao_cvv"; }
       else if (match(info, "nascimento", "birth", "dob", "data_nasc")) { v = dataV[0]; fieldKey = "data"; }
       else if (type === "password") v = "Teste@1234";
-      else if (el.tagName === "SELECT" && el.options.length > 1) v = el.options[randInt(1, el.options.length - 1)].value;
+      else if (type === "checkbox") {
+        if (match(info, "term", "aceit", "agree", "concord", "accept", "li ", "read ", "policy", "privacy")) {
+          v = true;
+        } else {
+          v = Math.random() > 0.5;
+        }
+      }
+      else if (type === "radio") {
+        if (el.name) {
+          if (!radiosPicked.has(el.name)) {
+            const group = Array.from(document.querySelectorAll(`input[type="radio"][name="${CSS.escape(el.name)}"]`)).filter(isVisible);
+            if (group.length > 0) {
+               const picked = group[randInt(0, group.length - 1)];
+               if (el === picked) { v = true; radiosPicked.add(el.name); } else { v = false; }
+            } else { v = true; radiosPicked.add(el.name); }
+          } else { v = false; }
+        } else {
+          v = Math.random() > 0.5;
+        }
+      }
+      else if (el.tagName === "SELECT") {
+        const valids = Array.from(el.options).filter(o => !o.disabled && o.value !== "");
+        if (valids.length > 0) {
+            const picked = valids[randInt(0, valids.length - 1)];
+            v = picked.value;
+        }
+      }
       else if (el.tagName === "TEXTAREA" && match(info, "obs", "observ", "mensagem", "message", "descri", "nota", "comment"))
         v = "Dados de teste gerados automaticamente pelo MockFiller.";
 
@@ -544,7 +573,7 @@
     const btn = document.createElement("div");
     btn.id = "__mockfiller_btn";
     btn.innerHTML = "🧪";
-    btn.title = "MockFiller – Preencher dados";
+    btn.title = "Tá Preenchido – Preencher dados";
     btn.style.cssText = [
       "position:fixed", "bottom:24px", "right:24px", "width:48px", "height:48px",
       "background:#89b4fa",
