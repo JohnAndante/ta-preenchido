@@ -56,11 +56,13 @@
   let SETTINGS = {
     floatVisible: true,
     shortcut: { ctrl: true, alt: false, shift: true, key: "F" },
-    customCategories: []
+    customCategories: [],
+    useBrasilAPI: true
   };
 
-  chrome.storage.local.get(["floatVisible", "shortcut", "customCategories"], (data) => {
+  chrome.storage.local.get(["floatVisible", "shortcut", "customCategories", "useBrasilAPI"], (data) => {
     if (data.floatVisible !== undefined) SETTINGS.floatVisible = data.floatVisible;
+    if (data.useBrasilAPI !== undefined) SETTINGS.useBrasilAPI = data.useBrasilAPI;
     if (data.shortcut) SETTINGS.shortcut = data.shortcut;
     if (data.customCategories) SETTINGS.customCategories = data.customCategories;
     applyFloatVisibility();
@@ -68,6 +70,7 @@
 
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.floatVisible) { SETTINGS.floatVisible = changes.floatVisible.newValue; applyFloatVisibility(); }
+    if (changes.useBrasilAPI) SETTINGS.useBrasilAPI = changes.useBrasilAPI.newValue;
     if (changes.shortcut) SETTINGS.shortcut = changes.shortcut.newValue;
     if (changes.customCategories) Object.assign(SETTINGS, { customCategories: changes.customCategories.newValue });
   });
@@ -405,7 +408,7 @@
     });
 
     let end;
-    if (hasCepField) {
+    if (hasCepField && SETTINGS.useBrasilAPI) {
       showToast("Buscando CEP...", 0);
       end = await buscarCepReal();
     } else {

@@ -82,6 +82,13 @@ function renderShortcut(s) {
   });
 });
 
+const useBrasilAPI = document.getElementById("useBrasilAPI");
+if (useBrasilAPI) {
+  useBrasilAPI.addEventListener("change", (e) => {
+    chrome.storage.local.set({ useBrasilAPI: e.target.checked });
+  });
+}
+
 const keyInput = document.getElementById("keyInput");
 if(keyInput) {
   keyInput.addEventListener("click", () => {
@@ -126,9 +133,13 @@ if(saveShortcutBtn) {
 }
 
 function loadData() {
-  chrome.storage.local.get(["customCategories", "shortcut"], (data) => {
+  chrome.storage.local.get(["customCategories", "shortcut", "useBrasilAPI"], (data) => {
     categories = data.customCategories || [];
     renderList();
+
+    if (data.useBrasilAPI !== undefined && document.getElementById("useBrasilAPI")) {
+      document.getElementById("useBrasilAPI").checked = data.useBrasilAPI;
+    }
 
     if (data.shortcut) currentShortcut = data.shortcut;
     if (document.getElementById("modCtrl")) {
