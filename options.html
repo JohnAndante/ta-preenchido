@@ -328,6 +328,50 @@
       color: #b4befe;
     }
 
+    /* ── Toggle Switch CSS ── */
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #313244;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .slider:before {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      left: 3px;
+      top: 3px;
+      transition: transform 0.2s;
+    }
+
+    .toggle input:checked+.slider {
+      background: #a6e3a1; /* Verde estilo sucesso do Catppuccin Macchiato */
+    }
+
+    .toggle input:checked+.slider:before {
+      transform: translateX(16px);
+    }
+
     /* Animations */
     .card {
       animation: slideUpFade 0.25s ease-out forwards;
@@ -355,7 +399,10 @@
     <div class="card" id="generalSettingsSection">
       <h2 style="margin-bottom:12px;">Geral</h2>
       <div style="display: flex; align-items: flex-start; gap: 10px;">
-        <input type="checkbox" id="useBrasilAPI" style="width: auto; margin-top: 4px;" checked>
+        <label class="toggle">
+          <input type="checkbox" id="useBrasilAPI" checked>
+          <span class="slider"></span>
+        </label>
         <div>
           <label for="useBrasilAPI"
             style="margin-bottom: 2px; cursor: pointer; color: #cdd6f4; font-size: 14px; font-weight: 600;">Usar
