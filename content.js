@@ -409,7 +409,7 @@
 
     let end;
     if (hasCepField && SETTINGS.useBrasilAPI) {
-      showToast("Buscando CEP...", 0);
+      showToast("Buscando CEP...", 3000);
       end = await buscarCepReal();
     } else {
       const estado = rand(DATA.estados);
