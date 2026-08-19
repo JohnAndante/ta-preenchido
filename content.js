@@ -291,6 +291,27 @@
     return type === "number" ? ctx.cartao.numero[1] : ctx.cartao.numero[0];
   }
 
+  function formatAddressBlock(endereco, numero) {
+    return [
+      "CEP: " + endereco.cep,
+      "Logradouro: " + endereco.logradouro,
+      "Número: " + numero,
+      "Bairro: " + endereco.bairro,
+      "Cidade: " + endereco.cidade,
+      "Estado: " + endereco.estado,
+    ].join("\n");
+  }
+
+  function formatCardBlock(cartao) {
+    return [
+      "Bandeira: " + cartao.bandeira,
+      "Número: " + cartao.numero[0],
+      "Validade: " + cartao.validade[0],
+      "CVV: " + cartao.cvv[0],
+      "Titular: " + cartao.nome[0],
+    ].join("\n");
+  }
+
   // ─── CEP REAL via BrasilAPI ───────────────────────────────────────────────
 
   async function buscarCepReal() {
@@ -926,8 +947,9 @@
       }
       else if (match(info, "rg", "identidade")) v = String(randInt(10000000, 99999999));
       else if (match(info, "cep", "zipcode", "zip_code", "postal")) { v = ctx.cepVariants[0]; fieldKey = "cep"; }
-      else if (match(info, "logradouro", "endereco", "endereço", "address", "rua", "street")) v = end.logradouro;
       else if (match(info, "bairro", "district", "neighborhood")) v = end.bairro;
+      else if (match(info, "numero", "número", "number") && match(info, "endereco", "endereço", "address", "logradouro", "rua", "street")) { v = numero; fieldKey = "numero"; }
+      else if (match(info, "logradouro", "endereco", "endereço", "address", "rua", "street")) v = end.logradouro;
       else if (match(info, "cidade", "city", "municipio", "município")) v = end.cidade;
       else if (match(info, "complemento", "complement", "apto", "apt")) v = "Apto " + randInt(1, 200);
       else if (match(info, "numero", "número") && !match(info, "phone", "tel", "cpf", "cartao", "card")) { v = numero; fieldKey = "numero"; }
@@ -1005,12 +1027,174 @@
 
   // ─── BOTÃO FLUTUANTE ──────────────────────────────────────────────────────
 
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0;";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+  }
+
+  async function generateFloatingActionData(dataType) {
+    const pessoa = gerarPessoaContext();
+    const empresa = gerarEmpresaContext(pessoa);
+
+    switch (dataType) {
+      case "cpf": return { label: "CPF", value: pessoa.cpfVariants[0] };
+      case "cnpj": return { label: "CNPJ", value: empresa.cnpjVariants[0] };
+      case "nome": return { label: "Nome", value: pessoa.nome };
+      case "empresa": return { label: "Empresa", value: empresa.nomeFantasia };
+      case "endereco": {
+        const endereco = await gerarEnderecoContext(true);
+        return { label: "Endereço", value: formatAddressBlock(endereco, String(randInt(1, 999))) };
+      }
+      case "cartao": return { label: "Cartão", value: formatCardBlock(gerarPagamentoContext(pessoa)) };
+      default: return null;
+    }
+  }
+
+  async function fillFromFloatingPanel(button) {
+    const original = button.textContent;
+    button.textContent = "Preenchendo...";
+    button.disabled = true;
+    try {
+      const r = await fillForms();
+      showToast(r.filled > 0
+        ? "Tá preenchido! " + r.filled + " campo" + (r.filled > 1 ? "s" : "") + "!\n" + r.source
+        : "Nada compatível pra preencher aqui.");
+    } finally {
+      button.textContent = original;
+      button.disabled = false;
+    }
+  }
+
+  async function copyFloatingAction(dataType, button) {
+    const original = button.textContent;
+    button.textContent = "...";
+    button.disabled = true;
+
+    try {
+      const data = await generateFloatingActionData(dataType);
+      if (!data) {
+        button.textContent = original;
+        button.disabled = false;
+        return;
+      }
+      await copyText(data.value);
+      button.textContent = "Copiado";
+      showToast(data.label + " copiado.", 1800);
+      setTimeout(() => { button.textContent = original; button.disabled = false; }, 900);
+    } catch (error) {
+      showToast("Não foi possível copiar: " + error.message);
+      button.textContent = original;
+      button.disabled = false;
+    }
+  }
+
+  function createFloatingPanel() {
+    if (document.getElementById("__mockfiller_panel")) return;
+
+    const panel = document.createElement("div");
+    panel.id = "__mockfiller_panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "false");
+    panel.setAttribute("aria-label", "Painel de ações rápidas do Tá Preenchido");
+    panel.tabIndex = -1;
+    panel.style.cssText = [
+      "position:fixed", "right:24px", "bottom:84px", "width:280px", "max-width:calc(100vw - 32px)",
+      "display:none", "padding:14px", "border-radius:16px", "background:rgba(30,30,46,0.98)",
+      "border:1px solid rgba(205,214,244,0.14)", "box-shadow:0 18px 50px rgba(0,0,0,0.35)",
+      "z-index:2147483647", "font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif",
+      "color:#cdd6f4", "box-sizing:border-box",
+    ].join(";");
+
+    panel.innerHTML = [
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;">',
+      '<div><div style="font-size:14px;font-weight:800;color:#cdd6f4;">Tá Preenchido</div>',
+      '<div style="font-size:11px;color:#a6adc8;margin-top:2px;">Dados rápidos na página</div></div>',
+      '<button id="__mockfiller_panel_close" aria-label="Fechar painel de ações rápidas" style="border:1px solid #313244;background:#181825;color:#cdd6f4;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:11px;font-weight:700;line-height:1;">Fechar</button>',
+      '</div>',
+      '<button id="__mockfiller_fill_action" style="width:100%;border:0;background:#89b4fa;color:#11111b;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:12px;">Preencher formulário</button>',
+      '<div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6c7086;font-weight:800;margin-bottom:8px;">Copiar dado</div>',
+      '<div id="__mockfiller_action_grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">',
+      '<button data-mockfiller-copy="cpf">CPF</button>',
+      '<button data-mockfiller-copy="cnpj">CNPJ</button>',
+      '<button data-mockfiller-copy="nome">Nome</button>',
+      '<button data-mockfiller-copy="empresa">Empresa</button>',
+      '<button data-mockfiller-copy="endereco">Endereço</button>',
+      '<button data-mockfiller-copy="cartao">Cartão</button>',
+      '</div>',
+    ].join("");
+
+    panel.querySelectorAll("button[data-mockfiller-copy]").forEach((button) => {
+      button.style.cssText = "border:1px solid #313244;background:#181825;color:#cdd6f4;border-radius:10px;padding:9px 8px;font-size:12px;font-weight:700;cursor:pointer;min-height:36px;";
+      button.addEventListener("click", () => copyFloatingAction(button.dataset.mockfillerCopy, button));
+    });
+
+    panel.querySelector("#__mockfiller_fill_action").addEventListener("click", (event) => {
+      fillFromFloatingPanel(event.currentTarget);
+    });
+    panel.querySelector("#__mockfiller_panel_close").addEventListener("click", () => closeFloatingPanel(true));
+    panel.addEventListener("click", event => event.stopPropagation());
+
+    document.body.appendChild(panel);
+  }
+
+  function isFloatingPanelOpen() {
+    const panel = document.getElementById("__mockfiller_panel");
+    return !!panel && panel.style.display !== "none";
+  }
+
+  function openFloatingPanel() {
+    createFloatingPanel();
+    const panel = document.getElementById("__mockfiller_panel");
+    const btn = document.getElementById("__mockfiller_btn");
+    if (!panel || !SETTINGS.floatVisible) return;
+    panel.style.display = "block";
+    panel.style.opacity = "1";
+    panel.style.pointerEvents = "auto";
+    if (btn) btn.setAttribute("aria-expanded", "true");
+    const primaryAction = panel.querySelector("#__mockfiller_fill_action");
+    if (primaryAction) primaryAction.focus({ preventScroll: true });
+  }
+
+  function closeFloatingPanel(restoreFocus) {
+    const panel = document.getElementById("__mockfiller_panel");
+    if (!panel) return;
+    panel.style.display = "none";
+    const btn = document.getElementById("__mockfiller_btn");
+    if (btn) {
+      btn.setAttribute("aria-expanded", "false");
+      if (restoreFocus) btn.focus({ preventScroll: true });
+    }
+  }
+
+  function toggleFloatingPanel() {
+    if (isFloatingPanelOpen()) closeFloatingPanel();
+    else openFloatingPanel();
+  }
+
   function createFloatingButton() {
     if (document.getElementById("__mockfiller_btn")) return;
+    createFloatingPanel();
+
     const btn = document.createElement("div");
     btn.id = "__mockfiller_btn";
     btn.innerHTML = "🧪";
-    btn.title = "Tá Preenchido – Preencher dados";
+    btn.title = "Tá Preenchido – Ações rápidas. Shift+clique preenche direto.";
+    btn.setAttribute("role", "button");
+    btn.setAttribute("aria-label", "Abrir painel de ações rápidas do Tá Preenchido");
+    btn.setAttribute("aria-controls", "__mockfiller_panel");
+    btn.setAttribute("aria-expanded", "false");
+    btn.tabIndex = 0;
     btn.style.cssText = [
       "position:fixed", "bottom:24px", "right:24px", "width:48px", "height:48px",
       "background:#89b4fa",
@@ -1024,15 +1208,27 @@
 
     btn.addEventListener("mouseenter", () => { btn.style.transform = "scale(1.12)"; btn.style.boxShadow = "0 6px 24px rgba(137,180,250,0.7)"; });
     btn.addEventListener("mouseleave", () => { btn.style.transform = "scale(1)"; btn.style.boxShadow = "0 4px 16px rgba(137,180,250,0.5)"; });
-    btn.addEventListener("click", async () => {
-      btn.innerHTML = "…"; btn.style.pointerEvents = "none";
-      try {
-        const r = await fillForms();
-        showToast(r.filled > 0
-          ? r.filled + " campo" + (r.filled > 1 ? "s" : "") + " preenchido" + (r.filled > 1 ? "s" : "") + "!\n" + r.source
-          : "Nenhum campo compatível encontrado.");
-      } finally {
-        btn.innerHTML = "🧪"; btn.style.pointerEvents = "auto";
+    btn.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (event.shiftKey) {
+        btn.innerHTML = "…"; btn.style.pointerEvents = "none";
+        try {
+          const r = await fillForms();
+          showToast(r.filled > 0
+            ? "Tá preenchido! " + r.filled + " campo" + (r.filled > 1 ? "s" : "") + "!\n" + r.source
+            : "Nada compatível pra preencher aqui.");
+        } finally {
+          btn.innerHTML = "🧪"; btn.style.pointerEvents = "auto";
+        }
+        return;
+      }
+
+      toggleFloatingPanel();
+    });
+    btn.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleFloatingPanel();
       }
     });
 
@@ -1042,10 +1238,16 @@
 
   function applyFloatVisibility() {
     const btn = document.getElementById("__mockfiller_btn");
-    if (!btn) return;
-    btn.style.opacity = SETTINGS.floatVisible ? "1" : "0";
-    btn.style.transform = SETTINGS.floatVisible ? "scale(1)" : "scale(0.8) translateY(10px)";
-    btn.style.pointerEvents = SETTINGS.floatVisible ? "auto" : "none";
+    const panel = document.getElementById("__mockfiller_panel");
+    if (btn) {
+      btn.style.display = SETTINGS.floatVisible ? "flex" : "none";
+      btn.style.opacity = SETTINGS.floatVisible ? "1" : "0";
+      btn.style.transform = SETTINGS.floatVisible ? "scale(1)" : "scale(0.8) translateY(10px)";
+      btn.style.pointerEvents = SETTINGS.floatVisible ? "auto" : "none";
+      btn.setAttribute("aria-hidden", SETTINGS.floatVisible ? "false" : "true");
+      btn.tabIndex = SETTINGS.floatVisible ? 0 : -1;
+    }
+    if (panel && !SETTINGS.floatVisible) closeFloatingPanel();
   }
 
   // ─── TOAST ────────────────────────────────────────────────────────────────
@@ -1058,7 +1260,7 @@
     t.id = "__mockfiller_toast";
     t.innerHTML = msg.replace(/\n/g, "<br>");
     t.style.cssText = [
-      "position:fixed", "bottom:84px", "right:24px",
+      "position:fixed", "bottom:" + (isFloatingPanelOpen() ? "384px" : "84px"), "right:24px",
       "background:#1e1e2e", "color:#cdd6f4",
       "padding:10px 18px", "border-radius:10px",
       "font-family:system-ui,sans-serif", "font-size:13px", "font-weight:500",
@@ -1080,8 +1282,8 @@
       const r = await fillForms();
       if (returnResult) return r;
       showToast(r.filled > 0
-        ? r.filled + " campo" + (r.filled > 1 ? "s" : "") + " preenchido" + (r.filled > 1 ? "s" : "") + "!\n" + r.source
-        : "Nenhum campo compatível encontrado.");
+        ? "Tá preenchido! " + r.filled + " campo" + (r.filled > 1 ? "s" : "") + "!\n" + r.source
+        : "Nada compatível pra preencher aqui.");
     } catch (e) {
       if (returnResult) return { filled: -1, source: "" };
       showToast("Erro: " + e.message);
@@ -1130,13 +1332,25 @@
     if (isEditableElement(editable)) lastContextMenuEditable = editable;
   }, true);
 
+  document.addEventListener("click", function (event) {
+    const panel = document.getElementById("__mockfiller_panel");
+    const btn = document.getElementById("__mockfiller_btn");
+    if (!panel || !isFloatingPanelOpen()) return;
+    if (panel.contains(event.target) || btn?.contains(event.target)) return;
+    closeFloatingPanel(false);
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeFloatingPanel(true);
+  });
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (!message || message.action !== "fillContextMenuField") return false;
 
     (async () => {
       const el = getCurrentEditable();
       if (!el) {
-        showToast("Nenhum campo editável selecionado.");
+        showToast("Escolha um campo editável primeiro.");
         sendResponse({ ok: false, error: "NO_EDITABLE_FIELD" });
         return;
       }
@@ -1148,7 +1362,7 @@
       }
 
       fillSingleEditable(el, value);
-      showToast("Campo preenchido.");
+      showToast("Tá preenchido!");
       sendResponse({ ok: true });
     })().catch((error) => {
       showToast("Erro: " + error.message);
