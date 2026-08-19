@@ -10,6 +10,13 @@
   * Adicionado `CONTRIBUTING.md`, cobrindo sagas, subissues, branches, commits, PRs, changelog e empacotamento para publicação.
   * Ajustado o template de feature request para aplicar `enhancement`, `type: feature`, assignee padrão e lembretes de changelog/Development.
   * Atualizado o template de pull request para referenciar issue relacionada e o guia de contribuição.
+* [#4](https://github.com/JohnAndante/ta-preenchido/issues/4) - Criar geração contextual coerente de pessoa empresa endereço e pagamento
+  * Adicionado contexto central de preenchimento com pessoa, empresa, endereço e pagamento gerados uma vez por execução.
+  * Dados de empresa passam a compartilhar razão social, nome fantasia, domínio, e-mail, telefone, CNPJ, responsável e cargo coerentes.
+  * Dados de pagamento passam a usar o titular alinhado com a pessoa gerada no contexto.
+  * O preenchimento agora escolhe e-mail, telefone e nome de pessoa ou empresa de acordo com o contexto detectado no formulário.
+  * Adicionada página local `manual-test/contextual-form-lab.html` para validar pessoa, empresa, misto B2B, cartão, endereço, selects, naming e casos de falha.
+  * Documentado em `CONTRIBUTING.md` o padrão de título de PR `#numero - descrição`.
 
 ## [1.3.0] - Março de 2026
 
