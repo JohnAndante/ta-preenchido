@@ -17,6 +17,12 @@
   * O preenchimento agora escolhe e-mail, telefone e nome de pessoa ou empresa de acordo com o contexto detectado no formulário.
   * Adicionada página local `manual-test/contextual-form-lab.html` para validar pessoa, empresa, misto B2B, cartão, endereço, selects, naming e casos de falha.
   * Documentado em `CONTRIBUTING.md` o padrão de título de PR `#numero - descrição`.
+* [#5](https://github.com/JohnAndante/ta-preenchido/issues/5) - Transformar popup em gerador rápido one click
+  * Substituídos os chips estáticos do popup por botões one-click para CPF, CNPJ, nome, e-mail, telefone, empresa, endereço e cartão.
+  * Adicionada cópia automática para dados rápidos, com feedback visual no botão e no status do popup.
+  * Cartão passa a ter ações separadas para copiar apenas o número ou o pacote completo.
+  * Adicionada configuração na página de Opções para escolher quais botões aparecem no acesso rápido do popup.
+  * Atualizada a versão exibida no footer do popup para `v1.3.0`.
 
 ## [1.3.0] - Março de 2026
 
