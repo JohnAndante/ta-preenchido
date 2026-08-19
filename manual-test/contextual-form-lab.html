@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tá Preenchido - Laboratório de Formulários</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #11111b;
+      --panel: #181825;
+      --muted: #6c7086;
+      --text: #cdd6f4;
+      --accent: #89b4fa;
+      --line: #313244;
+      --danger: #f38ba8;
+      --ok: #a6e3a1;
+      --warn: #f9e2af;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, rgba(137, 180, 250, .16), transparent 34rem), var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    header {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 18px;
+    }
+
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0; color: var(--muted); }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto 64px;
+      padding: 0 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 12px 0;
+      background: linear-gradient(var(--bg), rgba(17, 17, 27, .88));
+      backdrop-filter: blur(8px);
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: #1e1e2e;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #11111b;
+      border-color: var(--accent);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(24, 24, 37, .92);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.22);
+    }
+
+    .card h2 { margin: 0 0 6px; font-size: 20px; }
+    .card h3 { margin: 22px 0 10px; font-size: 15px; color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #11111b;
+      color: var(--text);
+      padding: 10px 11px;
+      min-height: 40px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(137, 180, 250, .16);
+    }
+
+    textarea { min-height: 90px; resize: vertical; }
+
+    .wide { grid-column: span 2; }
+    .full { grid-column: 1 / -1; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .expected {
+      border-left: 4px solid var(--ok);
+      padding: 10px 12px;
+      margin-top: 14px;
+      color: #d9f9d6;
+      background: rgba(166, 227, 161, .08);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .trap {
+      border-left: 4px solid var(--warn);
+      padding: 10px 12px;
+      margin-top: 14px;
+      color: #fff4c2;
+      background: rgba(249, 226, 175, .08);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .inline input { width: auto; min-height: auto; }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .toolbar button {
+      border: 1px solid var(--line);
+      background: #1e1e2e;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+
+    .toolbar button:hover { border-color: var(--accent); }
+
+    .log {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      min-height: 42px;
+      white-space: pre-wrap;
+    }
+
+    [contenteditable] {
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 11px;
+      background: #11111b;
+    }
+
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+      .wide, .full { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Laboratório de formulários</h1>
+    <p>Use esta página para testar o preenchimento contextual do Tá Preenchido. Clique no botão flutuante da extensão ou use o popup.</p>
+  </header>
+
+  <main class="shell">
+    <nav class="tabs" aria-label="Cenários de teste">
+      <button class="tab active" data-tab="pessoa">Pessoa</button>
+      <button class="tab" data-tab="empresa">Empresa</button>
+      <button class="tab" data-tab="misto">Misto B2B</button>
+      <button class="tab" data-tab="cartao">Cartão</button>
+      <button class="tab" data-tab="endereco">Endereço</button>
+      <button class="tab" data-tab="selects">Selects</button>
+      <button class="tab" data-tab="naming">Naming chato</button>
+      <button class="tab" data-tab="falhas">Armadilhas</button>
+    </nav>
+
+    <section class="panel active" id="pessoa">
+      <form class="card">
+        <h2>Cadastro de pessoa física</h2>
+        <p>Campos comuns de cadastro pessoal.</p>
+        <div class="expected">Esperado: nome, sobrenome e e-mail pessoal combinando; CPF válido; nascimento e telefone preenchidos.</div>
+        <div class="grid">
+          <label>Primeiro nome <input name="firstName" autocomplete="given-name" placeholder="Ex: Ana" /></label>
+          <label>Sobrenome <input name="lastName" autocomplete="family-name" placeholder="Ex: Silva" /></label>
+          <label>Nome completo <input name="nome_completo" autocomplete="name" /></label>
+          <label>E-mail <input type="email" name="email" placeholder="nome@email.com" /></label>
+          <label>Usuário <input name="username" placeholder="login do usuário" /></label>
+          <label>Telefone <input type="tel" name="telefone" placeholder="(11) 99999-9999" /></label>
+          <label>CPF <input name="cpf" pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" /></label>
+          <label>RG <input name="identidade" /></label>
+          <label>Data de nascimento <input name="data_nasc" placeholder="DD/MM/AAAA" /></label>
+          <label>Input date <input type="date" name="birthDate" /></label>
+          <label>Idade <input type="number" name="idade" min="18" max="80" /></label>
+          <label>Senha <input type="password" name="password" /></label>
+          <label class="full">Observações <textarea name="observacoes" placeholder="Mensagem, comentário ou observação"></textarea></label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="empresa">
+      <form class="card">
+        <h2>Cadastro de empresa</h2>
+        <p>Campos de pessoa jurídica e contato corporativo.</p>
+        <div class="expected">Esperado: razão social, nome fantasia, domínio, e-mail corporativo, CNPJ, responsável e cargo alinhados.</div>
+        <div class="grid">
+          <label>Razão social <input name="razao_social" placeholder="Razão Social" /></label>
+          <label>Nome fantasia <input name="nome_fantasia" placeholder="Nome Fantasia" /></label>
+          <label>CNPJ <input name="cnpj" /></label>
+          <label>Inscrição estadual <input name="inscricaoEstadual" /></label>
+          <label>Company e-mail <input type="email" name="companyEmail" /></label>
+          <label>Business phone <input type="tel" name="businessPhone" /></label>
+          <label>Domínio <input name="dominio" /></label>
+          <label>Website da empresa <input name="companyWebsite" /></label>
+          <label>Responsável legal <input name="representante_legal" /></label>
+          <label>Cargo <input name="cargo" /></label>
+          <label>Departamento financeiro <input type="email" name="emailFinanceiro" /></label>
+          <label>Atendimento <input type="tel" name="telefoneAtendimento" /></label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="misto">
+      <form class="card">
+        <h2>Cadastro misto B2B</h2>
+        <p>Empresa com responsável humano. Bom para pegar contexto agressivo demais.</p>
+        <div class="trap">Teste importante: e-mail genérico deve tender a pessoa; e-mail de contato/comercial deve tender a empresa.</div>
+        <div class="grid">
+          <label>Razão Social <input id="razaoSocial" name="razaoSocial" /></label>
+          <label>Nome da empresa <input id="companyName" name="companyName" /></label>
+          <label>CNPJ <input id="documentoCnpj" name="documentoCnpj" /></label>
+          <label>Nome do responsável <input name="responsavel" /></label>
+          <label>CPF do responsável <input name="cpfResponsavel" /></label>
+          <label>E-mail <input type="email" name="email" /></label>
+          <label>E-mail contato <input type="email" name="emailContato" /></label>
+          <label>E-mail comercial <input type="email" name="comercialEmail" /></label>
+          <label>Telefone <input type="tel" name="telefone" /></label>
+          <label>Telefone contato <input type="tel" name="telefoneContato" /></label>
+          <label>Cargo do contato <input name="contactPosition" /></label>
+          <label>Login <input name="login" /></label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="cartao">
+      <form class="card">
+        <h2>Checkout e pagamento</h2>
+        <p>Campos de cartão com nomes em português, inglês, snake_case, kebab-case e camelCase.</p>
+        <div class="expected">Esperado: número Luhn, titular igual à pessoa do contexto em caixa alta, validade e CVV.</div>
+        <div class="grid">
+          <label>Número do cartão <input name="cardNumber" autocomplete="cc-number" /></label>
+          <label>Nome no cartão <input name="cardHolderName" autocomplete="cc-name" /></label>
+          <label>Validade <input name="expiryDate" autocomplete="cc-exp" /></label>
+          <label>CVV <input name="cvv" autocomplete="cc-csc" /></label>
+          <label>numero_cartao <input name="numero_cartao" /></label>
+          <label>nome_cartao <input name="nome_cartao" /></label>
+          <label>vencimento-cartao <input name="vencimento-cartao" /></label>
+          <label>codigo_seguranca <input name="codigo_seguranca" /></label>
+          <label>Titular simples <input name="titular" placeholder="Só deve virar cartão porque o form tem pagamento" /></label>
+          <label>Validade simples <input name="validade" placeholder="MM/AA" /></label>
+          <label>Cartão type number <input type="number" name="card_number_raw" /></label>
+          <label>Bandeira textual <input name="cardBrand" placeholder="Ainda pode não preencher nesta issue" /></label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="endereco">
+      <form class="card">
+        <h2>Endereço</h2>
+        <p>Quando BrasilAPI estiver ligada, deve buscar CEP real; desligada, usa fallback local.</p>
+        <div class="grid">
+          <label>CEP <input name="cep" /></label>
+          <label>Zip code <input name="zipCode" /></label>
+          <label>Logradouro <input name="logradouro" /></label>
+          <label>Rua <input name="street" /></label>
+          <label>Número <input name="numero" /></label>
+          <label>Complemento <input name="complemento" /></label>
+          <label>Bairro <input name="bairro" /></label>
+          <label>Cidade <input name="cidade" /></label>
+          <label>Município <input name="municipio" /></label>
+          <label>Estado <input name="estado" /></label>
+          <label>País <input name="pais" /></label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="selects">
+      <form class="card">
+        <h2>Selects nativos</h2>
+        <p>Parte disso é da próxima issue, mas já dá para ver o comportamento atual.</p>
+        <div class="trap">Esperado agora: país/estado tentam opção coerente; selects genéricos ainda podem cair em opção aleatória. Melhorias finas virão na issue de selects.</div>
+        <div class="grid">
+          <label>Estado
+            <select name="estado">
+              <option value="">Selecione...</option>
+              <option value="SP">São Paulo</option>
+              <option value="RJ">Rio de Janeiro</option>
+              <option value="MG">Minas Gerais</option>
+              <option value="PR">Paraná</option>
+            </select>
+          </label>
+          <label>UF
+            <select name="uf">
+              <option value="">Selecione...</option>
+              <option value="SP">SP</option>
+              <option value="RJ">RJ</option>
+              <option value="MG">MG</option>
+              <option value="PR">PR</option>
+            </select>
+          </label>
+          <label>País
+            <select name="country">
+              <option value="">Choose...</option>
+              <option value="BR">Brasil</option>
+              <option value="US">Estados Unidos</option>
+              <option value="AR">Argentina</option>
+            </select>
+          </label>
+          <label>Tipo de pessoa
+            <select name="tipoPessoa">
+              <option value="">Selecione...</option>
+              <option value="pf">Pessoa Física</option>
+              <option value="pj">Pessoa Jurídica</option>
+            </select>
+          </label>
+          <label>Documento
+            <select name="tipoDocumento">
+              <option value="">Selecione...</option>
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+            </select>
+          </label>
+          <label>Bandeira
+            <select name="bandeiraCartao">
+              <option value="">Selecione...</option>
+              <option value="visa">Visa</option>
+              <option value="mastercard">Mastercard</option>
+              <option value="amex">Amex</option>
+              <option value="diners">Diners Club</option>
+            </select>
+          </label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="naming">
+      <form class="card">
+        <h2>Naming chato</h2>
+        <p>Campos com camelCase, snake_case, kebab-case, placeholders e labels.</p>
+        <div class="expected">Esperado: estes nomes devem ser entendidos após a normalização nova.</div>
+        <div class="grid">
+          <label for="nomeFantasiaCamel">Nome fantasia via label</label>
+          <input id="nomeFantasiaCamel" name="nomeFantasia" />
+
+          <label>razao-social <input name="razao-social" /></label>
+          <label>company.email <input type="email" name="company.email" /></label>
+          <label>business/phone <input type="tel" name="business/phone" /></label>
+          <label>card-holder-name <input name="card-holder-name" /></label>
+          <label>expiry_date <input name="expiry_date" /></label>
+          <label>securityCode <input name="securityCode" /></label>
+          <label>zip_code <input name="zip_code" /></label>
+          <label>data-testid CPF <input data-testid="customerCpfInput" /></label>
+          <label>aria-label CNPJ <input aria-label="companyCnpj" /></label>
+          <label class="full">Contenteditable simples <div contenteditable="true" aria-label="observacao"></div></label>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="falhas">
+      <form class="card">
+        <h2>Armadilhas e casos de falha</h2>
+        <p>Campos para ver se a extensão não preenche coisa errada ou se respeita validações/retries.</p>
+        <div class="trap">Alguns campos abaixo são propositalmente ambíguos. Nem tudo precisa ficar perfeito nesta issue.</div>
+        <div class="grid">
+          <label>Placeholder com e-mail de empresa não deve virar empresa sozinho
+            <input name="contato" placeholder="joao@empresa.com" />
+          </label>
+          <label>Nome de usuário não deve receber nome completo
+            <input name="user_name" placeholder="username" />
+          </label>
+          <label>Título de post não deveria virar cargo em contexto pessoal
+            <input name="title" placeholder="Título do artigo" />
+          </label>
+          <label>Role genérico fora de empresa
+            <input name="role" placeholder="Role interno" />
+          </label>
+          <label>Campo readonly não deve mudar
+            <input name="cpf_readonly" value="NAO ALTERAR" readonly />
+          </label>
+          <label>Campo disabled não deve mudar
+            <input name="cnpj_disabled" value="NAO ALTERAR" disabled />
+          </label>
+          <label>Hidden não deve mudar
+            <input type="hidden" name="cpf_hidden" value="NAO ALTERAR" />
+            <span class="hint">input hidden dentro do label</span>
+          </label>
+          <label>CPF só dígitos com pattern
+            <input name="cpfRaw" pattern="\d{11}" required />
+          </label>
+          <label>Telefone só dígitos com pattern
+            <input name="phoneRaw" pattern="\d{11}" required />
+          </label>
+          <label>CEP só dígitos com pattern
+            <input name="cepRaw" pattern="\d{8}" required />
+          </label>
+          <label class="wide">Textarea descrição
+            <textarea name="descricao" placeholder="descrição da empresa ou mensagem"></textarea>
+          </label>
+        </div>
+        <div class="row">
+          <label class="inline"><input type="checkbox" name="aceitoTermos" /> Aceito os termos</label>
+          <label class="inline"><input type="checkbox" name="newsletter" /> Newsletter aleatória</label>
+          <label class="inline"><input type="radio" name="genero" value="m" /> Masculino</label>
+          <label class="inline"><input type="radio" name="genero" value="f" /> Feminino</label>
+          <label class="inline"><input type="radio" name="genero" value="n" /> Não informar</label>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Ferramentas da página</h2>
+      <p>Use depois de preencher para inspecionar rapidamente os valores visíveis.</p>
+      <div class="toolbar">
+        <button type="button" id="dumpValues">Listar valores preenchidos</button>
+        <button type="button" id="clearValues">Limpar campos visíveis</button>
+      </div>
+      <pre class="log" id="log">Nada listado ainda.</pre>
+    </section>
+  </main>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        tabs.forEach((t) => t.classList.remove("active"));
+        panels.forEach((p) => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    function visibleFields() {
+      return Array.from(document.querySelectorAll("input:not([type=hidden]), textarea, select, [contenteditable='true']"))
+        .filter((el) => {
+          const rect = el.getBoundingClientRect();
+          const style = getComputedStyle(el);
+          return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+        });
+    }
+
+    document.getElementById("dumpValues").addEventListener("click", () => {
+      const lines = visibleFields().map((el) => {
+        const key = el.name || el.id || el.getAttribute("aria-label") || el.getAttribute("data-testid") || el.tagName.toLowerCase();
+        const value = el.type === "checkbox" || el.type === "radio"
+          ? String(el.checked)
+          : el.isContentEditable
+            ? el.textContent
+            : el.value;
+        return key + ": " + value;
+      });
+      document.getElementById("log").textContent = lines.join("\n") || "Nenhum campo visível encontrado.";
+    });
+
+    document.getElementById("clearValues").addEventListener("click", () => {
+      visibleFields().forEach((el) => {
+        if (el.disabled || el.readOnly) return;
+        if (el.type === "checkbox" || el.type === "radio") el.checked = false;
+        else if (el.isContentEditable) el.textContent = "";
+        else el.value = "";
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      document.getElementById("log").textContent = "Campos visíveis limpos.";
+    });
+  </script>
+</body>
+</html>
