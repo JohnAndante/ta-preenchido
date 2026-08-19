@@ -53,6 +53,19 @@
     "69010060", "74110010",
   ];
 
+  const LOCALIDADES = [
+    { cidade: "São Paulo", estado: "SP" },
+    { cidade: "Rio de Janeiro", estado: "RJ" },
+    { cidade: "Curitiba", estado: "PR" },
+    { cidade: "Belo Horizonte", estado: "MG" },
+    { cidade: "Porto Alegre", estado: "RS" },
+    { cidade: "Fortaleza", estado: "CE" },
+    { cidade: "Salvador", estado: "BA" },
+    { cidade: "Recife", estado: "PE" },
+    { cidade: "Manaus", estado: "AM" },
+    { cidade: "Goiânia", estado: "GO" },
+  ];
+
   // ─── ESTADO DAS CONFIGURAÇÕES ─────────────────────────────────────────────
 
   let SETTINGS = {
@@ -262,11 +275,11 @@
       return await buscarCepReal();
     }
 
-    const estado = rand(DATA.estados);
+    const localidade = rand(LOCALIDADES);
     return {
       cep: randInt(10000, 99999) + "-" + randInt(100, 999),
       logradouro: rand(DATA.ruas), bairro: rand(DATA.bairros),
-      cidade: rand(DATA.cidades), estado: estado.uf, fromApi: false,
+      cidade: localidade.cidade, estado: localidade.estado, fromApi: false,
     };
   }
 
@@ -293,17 +306,24 @@
         fromApi: true,
       };
     } catch (e) {
-      const estado = rand(DATA.estados);
+      const localidade = rand(LOCALIDADES);
       return {
         cep: randInt(10000, 99999) + "-" + randInt(100, 999),
         logradouro: rand(DATA.ruas), bairro: rand(DATA.bairros),
-        cidade: rand(DATA.cidades), estado: estado.uf,
+        cidade: localidade.cidade, estado: localidade.estado,
         fromApi: false,
       };
     }
   }
 
   // ─── DETECÇÃO DE CAMPOS ───────────────────────────────────────────────────
+
+  function getLabelText(label) {
+    if (!label) return "";
+    const clone = label.cloneNode(true);
+    clone.querySelectorAll("input, textarea, select, option, button").forEach(node => node.remove());
+    return clone.textContent || "";
+  }
 
   function getFieldInfo(el) {
     const attrs = [el.name, el.id, el.placeholder,
@@ -314,11 +334,11 @@
     try {
       if (el.id) {
         const l = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
-        if (l) lbl = l.textContent;
+        if (l) lbl = getLabelText(l);
       }
     } catch (_) { }
     const pl = el.closest("label");
-    if (pl) lbl += " " + pl.textContent;
+    if (pl) lbl += " " + getLabelText(pl);
 
     let text = attrs + " " + lbl;
     
@@ -508,6 +528,15 @@
       && s.display !== "none" && s.visibility !== "hidden" && s.opacity !== "0";
   }
 
+  function detectLocalFormContext(el, allFields, fallbackForm) {
+    const container = el.closest("form, fieldset, [role='form'], section, .card");
+    if (!container) return fallbackForm;
+
+    const localFields = allFields.filter(field => container.contains(field));
+    if (localFields.length <= 1) return fallbackForm;
+    return detectFormContext(localFields);
+  }
+
   // ─── DETECÇÃO DE ERRO NO CAMPO ────────────────────────────────────────────
   // Suporta: Ant Design, Bootstrap, Material UI, Chakra, Tailwind/custom, HTML5
 
@@ -627,6 +656,163 @@
     };
   }
 
+  function getOptionText(option) {
+    return normalizeSearchText([
+      option.value,
+      option.textContent,
+      option.label,
+      option.getAttribute("data-value"),
+      option.getAttribute("data-testid"),
+    ].filter(Boolean).join(" "));
+  }
+
+  function getOptionParts(option) {
+    return {
+      value: normalizeSearchText(option.value || "").trim(),
+      text: normalizeSearchText(option.textContent || "").trim(),
+      label: normalizeSearchText(option.label || "").trim(),
+      all: getOptionText(option).trim(),
+    };
+  }
+
+  function getTextTokens(text) {
+    return normalizeSearchText(text).split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  function isPlaceholderOption(option) {
+    if (!option || option.disabled) return true;
+    const value = String(option.value || "").trim();
+    const text = normalizeSearchText(option.textContent || option.label || "").trim();
+    const cleanText = text.replace(/[^a-z0-9]+/g, " ").trim();
+    if (value === "") return true;
+    return /^(selecione|selecionar|escolha|choose|select|placeholder|opcao|opção)(\s|$)/.test(cleanText)
+      || cleanText === ""
+      || cleanText === "-";
+  }
+
+  function pickSelectOption(select, candidates) {
+    if (!select || select.tagName !== "SELECT") return null;
+    const options = Array.from(select.options).filter(option => !isPlaceholderOption(option));
+    if (options.length === 0) return null;
+
+    const normalizedCandidates = (candidates || [])
+      .filter(Boolean)
+      .map(candidate => normalizeSearchText(String(candidate)))
+      .filter(Boolean);
+
+    for (const candidate of normalizedCandidates) {
+      const exact = options.find(option => {
+        const parts = getOptionParts(option);
+        return parts.value === candidate || parts.text === candidate || parts.label === candidate;
+      });
+      if (exact) return exact;
+    }
+
+    for (const candidate of normalizedCandidates) {
+      const candidateTokens = getTextTokens(candidate);
+      const token = options.find(option => {
+        const parts = getOptionParts(option);
+        const tokens = getTextTokens(parts.all);
+        if (candidateTokens.length > 1) {
+          return candidateTokens.every(candidateToken => tokens.includes(candidateToken));
+        }
+        return candidateTokens.some(candidateToken => tokens.includes(candidateToken));
+      });
+      if (token) return token;
+    }
+
+    for (const candidate of normalizedCandidates) {
+      if (candidate.length <= 3) continue;
+      const term = candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp("(^|[^a-z0-9])" + term + "([^a-z0-9]|$)", "i");
+      const word = options.find(option => regex.test(getOptionText(option)));
+      if (word) return word;
+    }
+
+    for (const candidate of normalizedCandidates) {
+      if (candidate.length <= 3) continue;
+      const contained = options.find(option => {
+        const text = getOptionText(option);
+        return text.indexOf(candidate) !== -1 || (text.length > 3 && candidate.indexOf(text) !== -1);
+      });
+      if (contained) return contained;
+    }
+
+    return null;
+  }
+
+  function pickSafeFallbackSelectOption(select) {
+    const options = Array.from(select.options).filter(option => !isPlaceholderOption(option));
+    if (options.length === 0) return null;
+    return options[randInt(0, options.length - 1)];
+  }
+
+  function getStateName(uf) {
+    const found = DATA.estados.find(estado => estado.uf === uf);
+    return found ? found.nome : uf;
+  }
+
+  function pickSelectValue(el, info, ctx, customMatch) {
+    let option = null;
+
+    if (customMatch) {
+      option = pickSelectOption(el, customMatch.values);
+      if (option) return option.value;
+    }
+
+    if (match(info, "tipo pessoa", "tipo_pessoa", "tipopessoa", "person type", "tipo cliente", "perfil")) {
+      if (ctx.form.principal === "empresa") {
+        option = pickSelectOption(el, ["pj", "pessoa juridica", "pessoa jurídica", "juridica", "jurídica", "empresa", "cnpj"]);
+      } else {
+        option = pickSelectOption(el, ["pf", "pessoa fisica", "pessoa física", "fisica", "física", "cpf"]);
+      }
+      if (option) return option.value;
+    }
+
+    if (match(info, "tipo documento", "tipo_documento", "document type", "documento", "doc type")) {
+      option = pickSelectOption(el, ctx.form.principal === "empresa" ? ["cnpj", "pessoa juridica", "pessoa jurídica"] : ["cpf", "pessoa fisica", "pessoa física"]);
+      if (option) return option.value;
+    }
+
+    if (match(info, "card_brand", "card brand", "cardbrand", "bandeira", "bandeira cartao", "bandeira cartão")) {
+      option = pickSelectOption(el, [ctx.cartao.bandeira, ctx.cartao.bandeira.toLowerCase(), ctx.cartao.bandeira.replace(/\s+/g, "")]);
+      if (option) return option.value;
+    }
+
+    if (match(info, "estado civil", "civil status", "marital", "marital status")) {
+      option = pickSelectOption(el, ["solteiro", "solteira", "single", "casado", "casada", "married"]);
+      if (option) return option.value;
+    }
+
+    if (pickCargoForField(info, ctx)) {
+      option = pickSelectOption(el, [ctx.empresa.cargo, "analista", "gerente", "coordenador", "diretor", "representante"]);
+      if (option) return option.value;
+    }
+
+    if (match(info, "estado", "state", "uf")) {
+      option = pickSelectOption(el, [ctx.end.estado, getStateName(ctx.end.estado), ctx.end.cidade]);
+      if (option) return option.value;
+    }
+
+    if (match(info, "cidade", "city", "municipio", "município")) {
+      option = pickSelectOption(el, [ctx.end.cidade]);
+      if (option) return option.value;
+    }
+
+    if (match(info, "pais", "país", "country")) {
+      option = pickSelectOption(el, ["br", "bra", "brasil", "brazil", "brasil/brazil"]);
+      if (option) return option.value;
+    }
+
+    if (match(info, "empresa", "company", "organizacao", "organization")) {
+      option = pickSelectOption(el, [ctx.empresa.nomeFantasia, ctx.empresa.razaoSocial, "empresa", "juridica", "jurídica"]);
+      if (option) return option.value;
+    }
+
+    option = pickSafeFallbackSelectOption(el);
+    return option ? option.value : null;
+  }
+
   // ─── PREENCHIMENTO PRINCIPAL ──────────────────────────────────────────────
 
   async function fillForms() {
@@ -681,7 +867,17 @@
         }
       }
 
-      if (customMatch) {
+      if (el.tagName === "SELECT") {
+        const selectCtx = { ...ctx, form: detectLocalFormContext(el, fields, form) };
+        v = pickSelectValue(el, info, selectCtx, customMatch);
+        if (customMatch) {
+          fieldKey = "custom_" + customMatch.id;
+          variantMap[fieldKey] = Array.from(el.options)
+            .filter(option => !isPlaceholderOption(option))
+            .map(option => option.value);
+        }
+      }
+      else if (customMatch) {
         const randomValues = [...customMatch.values].sort(() => Math.random() - 0.5);
         v = randomValues[0];
         fieldKey = "custom_" + customMatch.id;
@@ -735,19 +931,9 @@
       else if (match(info, "cidade", "city", "municipio", "município")) v = end.cidade;
       else if (match(info, "complemento", "complement", "apto", "apt")) v = "Apto " + randInt(1, 200);
       else if (match(info, "numero", "número") && !match(info, "phone", "tel", "cpf", "cartao", "card")) { v = numero; fieldKey = "numero"; }
-      else if (match(info, "estado", "state", "uf") && el.tagName === "SELECT") {
-        const opt = Array.from(el.options).find(o =>
-          o.value.toUpperCase() === end.estado ||
-          o.text.toLowerCase().indexOf(end.estado.toLowerCase()) !== -1);
-        if (opt) v = opt.value;
-      }
       else if (match(info, "estado", "state", "uf")) v = end.estado;
       else if (match(info, "pais", "país", "country")) {
-        if (el.tagName === "SELECT") {
-          const opt = Array.from(el.options).find(o =>
-            o.value.toLowerCase().indexOf("br") !== -1 || o.text.toLowerCase().indexOf("brasil") !== -1);
-          if (opt) v = opt.value;
-        } else v = "Brasil";
+        v = "Brasil";
       }
       else if (match(info, "nascimento", "birth", "dob", "data_nasc")) { v = ctx.pessoa.nascimentoVariants[0]; fieldKey = "data"; }
       else if (type === "password") v = "Teste@1234";
@@ -769,13 +955,6 @@
           } else { v = false; }
         } else {
           v = Math.random() > 0.5;
-        }
-      }
-      else if (el.tagName === "SELECT") {
-        const valids = Array.from(el.options).filter(o => !o.disabled && o.value !== "");
-        if (valids.length > 0) {
-          const picked = valids[randInt(0, valids.length - 1)];
-          v = picked.value;
         }
       }
       else if (el.tagName === "TEXTAREA" && match(info, "obs", "observ", "mensagem", "message", "descri", "nota", "comment"))

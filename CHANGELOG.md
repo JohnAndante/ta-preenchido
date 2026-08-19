@@ -28,6 +28,11 @@
   * Adicionada configuração na página de Opções para escolher quais itens aparecem no menu de contexto.
   * O content script passa a rastrear o último campo editável clicado com botão direito e preencher apenas esse campo.
   * O background envia o comando para o frame correto quando o Chrome informa `frameId`.
+* [#7](https://github.com/JohnAndante/ta-preenchido/issues/7) - Melhorar seleção inteligente de selects nativos
+  * Adicionado helper reutilizável para escolher options por texto, value, aliases e fallback seguro.
+  * Selects passam a escolher tipo de pessoa, documento, bandeira de cartão, estado civil, cargo, estado, cidade e país com base no contexto do formulário.
+  * Placeholders como `Selecione...` e `Choose...` deixam de ser escolhidos como fallback.
+  * Atualizado o laboratório manual com novos cenários de selects nativos.
 
 ## [1.3.0] - Março de 2026
 
