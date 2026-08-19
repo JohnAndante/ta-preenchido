@@ -33,6 +33,10 @@
   * Selects passam a escolher tipo de pessoa, documento, bandeira de cartão, estado civil, cargo, estado, cidade e país com base no contexto do formulário.
   * Placeholders como `Selecione...` e `Choose...` deixam de ser escolhidos como fallback.
   * Atualizado o laboratório manual com novos cenários de selects nativos.
+* [#8](https://github.com/JohnAndante/ta-preenchido/issues/8) - Criar painel flutuante com ações rápidas na página
+  * O botão flutuante passa a abrir um painel discreto com ações rápidas dentro da própria página.
+  * Adicionadas ações para preencher o formulário e copiar CPF, CNPJ, nome, empresa, endereço e cartão.
+  * O painel respeita a configuração de ocultar botão flutuante e fecha por botão, clique fora ou tecla `Escape`.
 
 ## [1.3.0] - Março de 2026
 
