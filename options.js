@@ -40,10 +40,23 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const DEFAULT_SHORTCUT = { ctrl: true, alt: false, shift: true, key: "F" };
+const QUICK_ACTIONS = [
+  { id: "cpf", label: "CPF" },
+  { id: "cnpj", label: "CNPJ" },
+  { id: "nome", label: "Nome" },
+  { id: "email", label: "E-mail" },
+  { id: "telefone", label: "Telefone" },
+  { id: "empresa", label: "Empresa" },
+  { id: "endereco", label: "Endereço" },
+  { id: "cartao-numero", label: "Nº cartão" },
+  { id: "cartao", label: "Cartão completo" },
+];
+const DEFAULT_QUICK_ACTIONS = QUICK_ACTIONS.map(action => action.id);
 let currentShortcut = { ...DEFAULT_SHORTCUT };
 let capturing = false;
 
 let categories = [];
+let quickActions = [...DEFAULT_QUICK_ACTIONS];
 
 function parseCSV(str) {
   return str.split(",").map(s => s.trim()).filter(Boolean);
@@ -86,6 +99,53 @@ const useBrasilAPI = document.getElementById("useBrasilAPI");
 if (useBrasilAPI) {
   useBrasilAPI.addEventListener("change", (e) => {
     chrome.storage.local.set({ useBrasilAPI: e.target.checked });
+  });
+}
+
+function renderQuickActions() {
+  const list = document.getElementById("quickActionsList");
+  if (!list) return;
+
+  list.textContent = "";
+  QUICK_ACTIONS.forEach((action) => {
+    const label = document.createElement("label");
+    label.className = "quick-action-option";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.value = action.id;
+    input.checked = quickActions.includes(action.id);
+
+    label.appendChild(input);
+    label.append(action.label);
+    list.appendChild(label);
+  });
+}
+
+function setQuickActionsStatus(message) {
+  const status = document.getElementById("quickActionsStatus");
+  if (!status) return;
+  status.textContent = message;
+  if (message) setTimeout(() => { status.textContent = ""; }, 2200);
+}
+
+const saveQuickActionsBtn = document.getElementById("saveQuickActions");
+if (saveQuickActionsBtn) {
+  saveQuickActionsBtn.addEventListener("click", async () => {
+    const checked = Array.from(document.querySelectorAll("#quickActionsList input:checked")).map(input => input.value);
+    quickActions = checked.filter(id => DEFAULT_QUICK_ACTIONS.includes(id));
+    await chrome.storage.local.set({ quickActions: quickActions });
+    setQuickActionsStatus("Acesso rápido salvo.");
+  });
+}
+
+const resetQuickActionsBtn = document.getElementById("resetQuickActions");
+if (resetQuickActionsBtn) {
+  resetQuickActionsBtn.addEventListener("click", async () => {
+    quickActions = [...DEFAULT_QUICK_ACTIONS];
+    await chrome.storage.local.set({ quickActions: quickActions });
+    renderQuickActions();
+    setQuickActionsStatus("Padrão restaurado.");
   });
 }
 
@@ -133,9 +193,14 @@ if(saveShortcutBtn) {
 }
 
 function loadData() {
-  chrome.storage.local.get(["customCategories", "shortcut", "useBrasilAPI"], (data) => {
+  chrome.storage.local.get(["customCategories", "shortcut", "useBrasilAPI", "quickActions"], (data) => {
     categories = data.customCategories || [];
     renderList();
+
+    if (Array.isArray(data.quickActions)) {
+      quickActions = data.quickActions.filter(id => DEFAULT_QUICK_ACTIONS.includes(id));
+    }
+    renderQuickActions();
 
     if (data.useBrasilAPI !== undefined && document.getElementById("useBrasilAPI")) {
       document.getElementById("useBrasilAPI").checked = data.useBrasilAPI;
