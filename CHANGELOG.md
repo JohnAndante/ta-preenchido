@@ -19,10 +19,14 @@
   * Documentado em `CONTRIBUTING.md` o padrão de título de PR `#numero - descrição`.
 * [#5](https://github.com/JohnAndante/ta-preenchido/issues/5) - Transformar popup em gerador rápido one click
   * Substituídos os chips estáticos do popup por botões one-click para CPF, CNPJ, nome, e-mail, telefone, empresa, endereço e cartão.
-  * Adicionada cópia automática para dados rápidos, com feedback visual no botão e no status do popup.
+  * Adicionada cópia automática para dados rápidos, com feedback visual no próprio botão.
   * Cartão passa a ter ações separadas para copiar apenas o número ou o pacote completo.
   * Adicionada configuração na página de Opções para escolher quais botões aparecem no acesso rápido do popup.
   * Atualizada a versão exibida no footer do popup para `v1.3.0`.
+* [#6](https://github.com/JohnAndante/ta-preenchido/issues/6) - Adicionar menu de contexto para preencher campo específico
+  * Adicionado menu de contexto `Tá Preenchido` para campos editáveis, com opções de nome, e-mail, telefone, CPF, CNPJ, CEP, empresa e cartão.
+  * O content script passa a rastrear o último campo editável clicado com botão direito e preencher apenas esse campo.
+  * O background envia o comando para o frame correto quando o Chrome informa `frameId`.
 
 ## [1.3.0] - Março de 2026
 
