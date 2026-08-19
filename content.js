@@ -36,10 +36,10 @@
     empresaSufixos: ["Tecnologia", "Soluções", "Sistemas", "Consultoria", "Comércio", "Serviços", "Digital", "Logística"],
     empresaTipos: ["LTDA", "ME", "EPP", "S.A."],
     bandeiras: [
-      { nome: "Visa", prefix: "4", length: 16 },
-      { nome: "Mastercard", prefix: "5", length: 16 },
-      { nome: "Amex", prefix: "37", length: 15 },
-      { nome: "Diners Club", prefix: "36", length: 14 },
+      { nome: "Visa", prefixes: ["4539", "4556", "4916", "4532", "4929"], length: 16, auto: true },
+      { nome: "Mastercard", prefixes: ["51", "52", "53", "54", "55"], length: 16, auto: true },
+      { nome: "Amex", prefixes: ["34", "37"], length: 15, auto: false },
+      { nome: "Diners Club", prefixes: ["300", "301", "302", "303", "304", "305", "36", "38"], length: 14, auto: false },
     ],
   };
 
@@ -85,6 +85,13 @@
   function onlyDigits(s) { return (s || "").replace(/\D/g, ""); }
   function stripAccents(s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
   function slugify(s) { return stripAccents(s).toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 28); }
+  function normalizeSearchText(s) {
+    return stripAccents(s || "")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/[_\-.\/]+/g, " ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  }
 
   // ─── GERADORES ────────────────────────────────────────────────────────────
 
@@ -168,16 +175,27 @@
     ];
   }
 
-  function gerarCartaoVariants() {
-    const b = rand(DATA.bandeiras);
-    let num = b.prefix;
-    const luhn = (s) => {
+  function gerarCartaoVariants(titular) {
+    const b = rand(DATA.bandeiras.filter(b => b.auto !== false));
+    let base = rand(b.prefixes);
+    const isValidLuhn = (s) => {
       const d = s.split("").map(Number);
-      for (let i = d.length - 2; i >= 0; i -= 2) { d[i] *= 2; if (d[i] > 9) d[i] -= 9; }
-      return (10 - (d.reduce((a, x) => a + x, 0) % 10)) % 10;
+      let sum = 0;
+      let shouldDouble = false;
+      for (let i = d.length - 1; i >= 0; i--) {
+        let digit = d[i];
+        if (shouldDouble) {
+          digit *= 2;
+          if (digit > 9) digit -= 9;
+        }
+        sum += digit;
+        shouldDouble = !shouldDouble;
+      }
+      return sum % 10 === 0;
     };
-    while (num.length < b.length - 1) num += randInt(0, 9);
-    num += luhn(num);
+    while (base.length < b.length - 1) base += randInt(0, 9);
+    const checkDigit = Array.from({ length: 10 }, (_, i) => String(i)).find(d => isValidLuhn(base + d));
+    const num = base + (checkDigit || "0");
     const g = b.length === 15
       ? [num.slice(0, 4), num.slice(4, 10), num.slice(10)]
       : [num.slice(0, 4), num.slice(4, 8), num.slice(8, 12), num.slice(12)];
@@ -188,12 +206,13 @@
     const yyyy = String(randInt(26, 30));
     const yy = yyyy.slice(2);
     const cvv = String(randInt(b.length === 15 ? 1000 : 100, b.length === 15 ? 9999 : 999));
-    const nome = gerarNome().toUpperCase();
+    const nome = (titular || gerarNome()).toUpperCase();
     return {
       numero: [spaced, raw, dashed], // variantes do número
       validade: [mm + "/" + yyyy, mm + "/" + yy, mm + yy, mm + "-" + yy], // variantes da validade
       cvv: [cvv],
       nome: [nome],
+      bandeira: b.nome,
     };
   }
 
@@ -253,6 +272,10 @@
     return gerarCartaoVariants(pessoa.nome);
   }
 
+  function getCardNumberValue(ctx, type) {
+    return type === "number" ? ctx.cartao.numero[1] : ctx.cartao.numero[0];
+  }
+
   // ─── CEP REAL via BrasilAPI ───────────────────────────────────────────────
 
   async function buscarCepReal() {
@@ -284,16 +307,16 @@
     const attrs = [el.name, el.id, el.placeholder,
     el.getAttribute("aria-label"), el.getAttribute("data-testid"),
     el.getAttribute("autocomplete"), el.getAttribute("pattern"),
-    ].filter(Boolean).join(" ").toLowerCase();
+    ].filter(Boolean).join(" ");
     let lbl = "";
     try {
       if (el.id) {
         const l = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
-        if (l) lbl = l.textContent.toLowerCase();
+        if (l) lbl = l.textContent;
       }
     } catch (_) { }
     const pl = el.closest("label");
-    if (pl) lbl += " " + pl.textContent.toLowerCase();
+    if (pl) lbl += " " + pl.textContent;
 
     let text = attrs + " " + lbl;
     
@@ -301,18 +324,74 @@
     text = text.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, " email ");
     text = text.replace(/https?:\/\/[a-z0-9.-]+/gi, " url ");
     
-    return text;
+    return normalizeSearchText(text);
   }
 
   function match(info) {
+    const normalizedInfo = normalizeSearchText(info);
     for (let i = 1; i < arguments.length; i++) {
-       const term = arguments[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escapa regex
+       const term = normalizeSearchText(arguments[i]).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // escapa regex
        // Expressão regular avançada: procura o termo como palavra inteira,
        // respeitando acentos brasileiros e camelCase/snake_case delimitadores usuais.
-       const regex = new RegExp('(^|[^a-z0-9áéíóúâêîôûãõç])' + term + '([^a-z0-9áéíóúâêîôûãõç]|$)', 'i');
-       if (regex.test(info)) return true;
+       const regex = new RegExp('(^|[^a-z0-9])' + term + '([^a-z0-9]|$)', 'i');
+       if (regex.test(normalizedInfo)) return true;
     }
     return false;
+  }
+
+  function detectFormContext(fields) {
+    const text = fields.map(getFieldInfo).join(" ");
+    const score = {
+      pessoa: 0,
+      empresa: 0,
+      pagamento: 0,
+      endereco: 0,
+    };
+
+    if (match(text, "cpf", "pessoa fisica", "pessoa física", "nascimento", "sobrenome", "firstname", "first name", "lastname", "last name")) score.pessoa += 3;
+    if (match(text, "cnpj", "razao social", "razão social", "nome fantasia", "empresa", "company", "organizacao", "organization", "inscricao estadual", "inscrição estadual")) score.empresa += 4;
+    if (match(text, "cartao", "cartão", "card", "cvv", "cvc", "validade", "expiry", "vencimento", "titular")) score.pagamento += 4;
+    if (match(text, "cep", "zipcode", "postal", "logradouro", "endereco", "endereço", "bairro", "cidade", "municipio", "município")) score.endereco += 3;
+
+    let principal = "pessoa";
+    if (score.empresa > score.pessoa) principal = "empresa";
+    if (score.pagamento > Math.max(score.empresa, score.pessoa)) principal = "pagamento";
+
+    return {
+      principal: principal,
+      hasPessoa: score.pessoa > 0,
+      hasEmpresa: score.empresa > 0,
+      hasPagamento: score.pagamento > 0,
+      hasEndereco: score.endereco > 0,
+      score: score,
+    };
+  }
+
+  function fieldLooksCompany(info) {
+    return match(info, "empresa", "company", "organizacao", "organization", "razao social", "razão social", "nome fantasia", "cnpj", "inscricao estadual", "inscrição estadual", "corporate", "business");
+  }
+
+  function fieldLooksPersonOwner(info) {
+    return match(info, "responsavel", "responsável", "representante", "titular", "solicitante", "owner", "person", "pessoa");
+  }
+
+  function pickEmailForField(info, ctx) {
+    if (match(info, "login", "username", "usuario", "usuário")) return ctx.pessoa.email;
+    if (ctx.form.principal === "empresa" && match(info, "contato", "comercial", "atendimento", "financeiro")) return ctx.empresa.email;
+    if (fieldLooksCompany(info)) return ctx.empresa.email;
+    return ctx.pessoa.email;
+  }
+
+  function pickPhoneForField(info, ctx) {
+    if (ctx.form.principal === "empresa" && match(info, "contato", "comercial", "atendimento", "financeiro")) return ctx.empresa.telefone;
+    if (fieldLooksCompany(info)) return ctx.empresa.telefone;
+    return ctx.pessoa.telefone;
+  }
+
+  function pickCargoForField(info, ctx) {
+    if (match(info, "cargo", "profissao", "profissão", "occupation", "position")) return ctx.empresa.cargo;
+    if (ctx.form.principal === "empresa" && match(info, "role", "title")) return ctx.empresa.cargo;
+    return null;
   }
 
   // ─── DISPATCH ─────────────────────────────────────────────────────────────
@@ -422,34 +501,40 @@
   // Ao detectar erro após o fill primário, tentamos as próximas variantes em sequência.
 
   function buildVariantMap(ctx) {
-    // ctx: { email, nome, cpfV, cnpjV, celV, cepV, dataV, cartaoV, end, numero }
     return {
       // ── Telefone/celular ──
-      telefone: ctx.celV,
+      telefone: ctx.pessoa.telefoneVariants,
+      telefone_empresa: ctx.empresa.telefoneVariants,
 
       // ── CPF ──
-      cpf: ctx.cpfV,
+      cpf: ctx.pessoa.cpfVariants,
 
       // ── CNPJ ──
-      cnpj: ctx.cnpjV,
+      cnpj: ctx.empresa.cnpjVariants,
 
       // ── CEP ──
-      cep: ctx.cepV,
+      cep: ctx.cepVariants,
 
       // ── Data ──
-      data: ctx.dataV,
+      data: ctx.pessoa.nascimentoVariants,
 
       // ── Cartão número ──
-      cartao_numero: ctx.cartaoV.numero,
-      cartao_validade: ctx.cartaoV.validade,
-      cartao_cvv: ctx.cartaoV.cvv,
-      cartao_nome: ctx.cartaoV.nome,
+      cartao_numero: ctx.cartao.numero,
+      cartao_validade: ctx.cartao.validade,
+      cartao_cvv: ctx.cartao.cvv,
+      cartao_nome: ctx.cartao.nome,
 
       // ── E-mail (variante sem ponto no local part) ──
       email: [
-        ctx.email,
-        ctx.email.replace(/\./g, "_"),
-        ctx.email.split("@")[0].replace(/\d+$/, "") + "@" + ctx.email.split("@")[1],
+        ctx.pessoa.email,
+        ctx.pessoa.email.replace(/\./g, "_"),
+        ctx.pessoa.email.split("@")[0].replace(/\d+$/, "") + "@" + ctx.pessoa.email.split("@")[1],
+      ],
+
+      email_empresa: [
+        ctx.empresa.email,
+        gerarEmailEmpresa(ctx.empresa.dominio, "financeiro"),
+        gerarEmailEmpresa(ctx.empresa.dominio, "suporte"),
       ],
 
       // ── Número/endereço ──
@@ -460,15 +545,6 @@
   // ─── PREENCHIMENTO PRINCIPAL ──────────────────────────────────────────────
 
   async function fillForms() {
-    const nome = gerarNome();
-    const email = gerarEmail(nome);
-    const cpfV = gerarCPFVariants();
-    const cnpjV = gerarCNPJVariants();
-    const celV = gerarCelularVariants();
-    const dataV = gerarDataVariants();
-    const cartaoV = gerarCartaoVariants();
-    const numero = String(randInt(1, 999));
-
     const sel = [
       "input:not([type=hidden]):not([type=submit]):not([type=button])",
       ":not([type=reset])",
@@ -477,28 +553,22 @@
       ", select:not([disabled])",
     ].join("");
 
+    const fields = Array.from(document.querySelectorAll(sel)).filter(isVisible);
+    const form = detectFormContext(fields);
+
     // Só consulta a BrasilAPI se houver campo de CEP/endereço visível
-    const hasCepField = Array.from(document.querySelectorAll(sel)).some(function (el) {
-      if (!isVisible(el)) return false;
+    const hasCepField = fields.some(function (el) {
       return match(getFieldInfo(el), "cep", "zipcode", "zip_code", "postal", "logradouro", "endereco", "endereço", "bairro", "street");
     });
 
-    let end;
-    if (hasCepField && SETTINGS.useBrasilAPI) {
-      showToast("Buscando CEP...", 3000);
-      end = await buscarCepReal();
-    } else {
-      const estado = rand(DATA.estados);
-      end = {
-        cep: randInt(10000, 99999) + "-" + randInt(100, 999),
-        logradouro: rand(DATA.ruas), bairro: rand(DATA.bairros),
-        cidade: rand(DATA.cidades), estado: estado.uf, fromApi: false,
-      };
-    }
+    const pessoa = gerarPessoaContext();
+    const empresa = gerarEmpresaContext(pessoa);
+    const end = await gerarEnderecoContext(hasCepField);
+    const cartao = gerarPagamentoContext(pessoa);
+    const numero = String(randInt(1, 999));
+    const cepVariants = gerarCEPVariants(end.cep);
 
-    const cepV = gerarCEPVariants(end.cep);
-
-    const ctx = { email, nome, cpfV, cnpjV, celV, cepV, dataV, cartaoV, end, numero };
+    const ctx = { pessoa, empresa, end, cartao, numero, cepVariants, form };
     const variantMap = buildVariantMap(ctx);
 
     // Guarda: el → { fieldKey, variantIndex }  para o retry
@@ -506,8 +576,7 @@
     let filled = 0;
     const radiosPicked = new Set();
 
-    document.querySelectorAll(sel).forEach(function (el) {
-      if (!isVisible(el)) return;
+    fields.forEach(function (el) {
       const info = getFieldInfo(el);
       const type = (el.type || "").toLowerCase();
       let v = null;
@@ -516,6 +585,11 @@
       // ── Classificação e valor primário ──
       let customMatch = null;
       for (const cat of SETTINGS.customCategories || []) {
+        // Categorias padrão antigas usam valores soltos e podem quebrar o contexto
+        // coerente recém-gerado (ex.: firstName/lastName recebendo nome completo
+        // de uma lista estática enquanto o e-mail vem de outra pessoa). Mantemos
+        // override apenas para categorias realmente criadas pelo usuário.
+        if (String(cat.id || "").indexOf("default_") === 0) continue;
         if (cat.identifiers.some(id => match(info, id.toLowerCase()))) {
           customMatch = cat;
           break;
@@ -528,25 +602,49 @@
         fieldKey = "custom_" + customMatch.id;
         variantMap[fieldKey] = randomValues;
       }
-      else if (type === "email") { v = email; fieldKey = "email"; }
-      else if (type === "tel") { v = celV[0]; fieldKey = "telefone"; }
-      else if (type === "date") { v = dataV[1]; /* ISO para input date */ }
+      else if (match(info, "card_number", "cardnumber", "card number", "numero_cartao", "card-number", "numero cartao", "número cartão", "pan")) { v = getCardNumberValue(ctx, type); fieldKey = "cartao_numero"; }
+      else if (match(info, "card_name", "card name", "cardholder", "card holder", "card holder name", "titular cartao", "titular cartão", "nome_cartao", "nome cartao", "nome cartão") || (ctx.form.hasPagamento && match(info, "titular"))) { v = ctx.cartao.nome[0]; fieldKey = "cartao_nome"; }
+      else if (match(info, "expiry", "validade cartao", "validade cartão", "expiracao", "expiração", "exp_date", "vencimento cartao", "vencimento cartão") || (ctx.form.hasPagamento && match(info, "validade", "vencimento"))) { v = ctx.cartao.validade[0]; fieldKey = "cartao_validade"; }
+      else if (match(info, "cvv", "cvc", "csc", "security_code", "cod_seguranca", "codigo seguranca", "código segurança")) { v = ctx.cartao.cvv[0]; fieldKey = "cartao_cvv"; }
+      else if (match(info, "card_brand", "card brand", "cardbrand", "bandeira", "bandeira cartao", "bandeira cartão")) { v = ctx.cartao.bandeira; }
+      else if (match(info, "cnpj")) { v = ctx.empresa.cnpjVariants[0]; fieldKey = "cnpj"; }
+      else if (match(info, "cpf")) { v = ctx.pessoa.cpfVariants[0]; fieldKey = "cpf"; }
+      else if (type === "email") {
+        v = pickEmailForField(info, ctx);
+        fieldKey = v === ctx.empresa.email ? "email_empresa" : "email";
+      }
+      else if (type === "tel") {
+        v = pickPhoneForField(info, ctx);
+        fieldKey = v === ctx.empresa.telefone ? "telefone_empresa" : "telefone";
+      }
+      else if (type === "date") { v = ctx.pessoa.nascimentoVariants[1]; /* ISO para input date */ }
       else if (type === "number") {
         v = match(info, "idade", "age") ? String(randInt(18, 60))
           : match(info, "cep", "zip") ? onlyDigits(end.cep)
             : String(randInt(1, 100));
       }
-      else if (match(info, "firstname", "primeiro", "given", "nome_proprio")) v = nome.split(" ")[0];
-      else if (match(info, "lastname", "surname", "sobrenome", "family")) v = nome.split(" ").slice(1).join(" ");
-      else if (match(info, "fullname", "nome_completo", "full_name", "nome completo")) v = nome;
-      else if (match(info, "nome", "name") && !match(info, "user", "login", "username")) v = nome;
-      else if (match(info, "username", "usuario", "login") && !match(info, "email")) v = email.split("@")[0];
-      else if (match(info, "email", "e-mail", "mail")) { v = email; fieldKey = "email"; }
-      else if (match(info, "fone", "phone", "celular", "whatsapp", "telefone", "tel", "mobile")) { v = celV[0]; fieldKey = "telefone"; }
-      else if (match(info, "cnpj")) { v = cnpjV[0]; fieldKey = "cnpj"; }
-      else if (match(info, "cpf")) { v = cpfV[0]; fieldKey = "cpf"; }
+      else if (match(info, "razao social", "razão social", "legal_name")) v = ctx.empresa.razaoSocial;
+      else if (match(info, "nome fantasia", "fantasy_name", "trade_name")) v = ctx.empresa.nomeFantasia;
+      else if (match(info, "dominio", "domínio", "domain")) v = ctx.empresa.dominio;
+      else if (match(info, "site", "website", "url") && fieldLooksCompany(info)) v = "https://" + ctx.empresa.dominio;
+      else if (match(info, "responsavel", "responsável", "representante", "representante legal")) v = ctx.empresa.responsavel;
+      else if (pickCargoForField(info, ctx)) v = pickCargoForField(info, ctx);
+      else if (match(info, "empresa", "company", "organizacao", "organization") && match(info, "nome", "name")) v = ctx.empresa.nomeFantasia;
+      else if (match(info, "firstname", "first name", "primeiro", "given", "given name", "nome_proprio", "nome proprio")) v = ctx.pessoa.primeiroNome;
+      else if (match(info, "lastname", "last name", "surname", "sobrenome", "family", "family name")) v = ctx.pessoa.sobrenome;
+      else if (match(info, "fullname", "full name", "nome_completo", "full_name", "nome completo")) v = fieldLooksPersonOwner(info) || ctx.form.principal !== "empresa" ? ctx.pessoa.nome : ctx.empresa.nomeFantasia;
+      else if (match(info, "nome", "name") && !match(info, "user", "login", "username")) v = fieldLooksCompany(info) && !fieldLooksPersonOwner(info) ? ctx.empresa.nomeFantasia : ctx.pessoa.nome;
+      else if (match(info, "username", "usuario", "login") && !match(info, "email")) v = ctx.pessoa.email.split("@")[0];
+      else if (match(info, "email", "e-mail", "mail")) {
+        v = pickEmailForField(info, ctx);
+        fieldKey = v === ctx.empresa.email ? "email_empresa" : "email";
+      }
+      else if (match(info, "fone", "phone", "celular", "whatsapp", "telefone", "tel", "mobile")) {
+        v = pickPhoneForField(info, ctx);
+        fieldKey = v === ctx.empresa.telefone ? "telefone_empresa" : "telefone";
+      }
       else if (match(info, "rg", "identidade")) v = String(randInt(10000000, 99999999));
-      else if (match(info, "cep", "zipcode", "zip_code", "postal")) { v = cepV[0]; fieldKey = "cep"; }
+      else if (match(info, "cep", "zipcode", "zip_code", "postal")) { v = ctx.cepVariants[0]; fieldKey = "cep"; }
       else if (match(info, "logradouro", "endereco", "endereço", "address", "rua", "street")) v = end.logradouro;
       else if (match(info, "bairro", "district", "neighborhood")) v = end.bairro;
       else if (match(info, "cidade", "city", "municipio", "município")) v = end.cidade;
@@ -566,11 +664,7 @@
           if (opt) v = opt.value;
         } else v = "Brasil";
       }
-      else if (match(info, "card_number", "cardnumber", "numero_cartao", "card-number", "pan")) { v = cartaoV.numero[0]; fieldKey = "cartao_numero"; }
-      else if (match(info, "card_name", "cardholder", "titular", "nome_cartao")) { v = cartaoV.nome[0]; fieldKey = "cartao_nome"; }
-      else if (match(info, "expiry", "validade", "expiracao", "expiração", "exp_date", "vencimento")) { v = cartaoV.validade[0]; fieldKey = "cartao_validade"; }
-      else if (match(info, "cvv", "cvc", "csc", "security_code", "cod_seguranca")) { v = cartaoV.cvv[0]; fieldKey = "cartao_cvv"; }
-      else if (match(info, "nascimento", "birth", "dob", "data_nasc")) { v = dataV[0]; fieldKey = "data"; }
+      else if (match(info, "nascimento", "birth", "dob", "data_nasc")) { v = ctx.pessoa.nascimentoVariants[0]; fieldKey = "data"; }
       else if (type === "password") v = "Teste@1234";
       else if (type === "checkbox") {
         if (match(info, "term", "aceit", "agree", "concord", "accept", "li ", "read ", "policy", "privacy")) {
