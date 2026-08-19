@@ -48,16 +48,23 @@ const CONTEXT_MENU_ITEMS = [
   { id: "ta-preenchido-empresa", title: "Empresa", dataType: "empresa" },
   { id: "ta-preenchido-cartao", title: "Cartão", dataType: "cartao" }
 ];
+const DEFAULT_CONTEXT_MENU_ACTIONS = CONTEXT_MENU_ITEMS.map(item => item.dataType);
 
-function createContextMenus() {
+function createContextMenus(enabledActions) {
+  const activeActions = Array.isArray(enabledActions)
+    ? enabledActions.filter(action => DEFAULT_CONTEXT_MENU_ACTIONS.includes(action))
+    : DEFAULT_CONTEXT_MENU_ACTIONS;
+
   chrome.contextMenus.removeAll(() => {
+    if (activeActions.length === 0) return;
+
     chrome.contextMenus.create({
       id: CONTEXT_MENU_ROOT_ID,
       title: "Tá Preenchido",
       contexts: ["editable"]
     });
 
-    CONTEXT_MENU_ITEMS.forEach((item) => {
+    CONTEXT_MENU_ITEMS.filter(item => activeActions.includes(item.dataType)).forEach((item) => {
       chrome.contextMenus.create({
         id: item.id,
         parentId: CONTEXT_MENU_ROOT_ID,
@@ -68,8 +75,14 @@ function createContextMenus() {
   });
 }
 
+function refreshContextMenus() {
+  chrome.storage.local.get(["contextMenuActions"], (data) => {
+    createContextMenus(data.contextMenuActions);
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
-  createContextMenus();
+  refreshContextMenus();
 
   chrome.storage.local.get(["customCategories"], (data) => {
     if (!data.customCategories || data.customCategories.length === 0) {
@@ -90,6 +103,16 @@ chrome.commands.onCommand.addListener((command) => {
         });
       }
     });
+  }
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  refreshContextMenus();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.contextMenuActions) {
+    createContextMenus(changes.contextMenuActions.newValue);
   }
 });
 

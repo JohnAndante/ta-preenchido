@@ -25,6 +25,7 @@
   * Atualizada a versão exibida no footer do popup para `v1.3.0`.
 * [#6](https://github.com/JohnAndante/ta-preenchido/issues/6) - Adicionar menu de contexto para preencher campo específico
   * Adicionado menu de contexto `Tá Preenchido` para campos editáveis, com opções de nome, e-mail, telefone, CPF, CNPJ, CEP, empresa e cartão.
+  * Adicionada configuração na página de Opções para escolher quais itens aparecem no menu de contexto.
   * O content script passa a rastrear o último campo editável clicado com botão direito e preencher apenas esse campo.
   * O background envia o comando para o frame correto quando o Chrome informa `frameId`.
 
