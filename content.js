@@ -33,6 +33,8 @@
     ],
     ddds: ["11", "21", "41", "31", "51", "85", "71", "81", "92", "62", "48", "27", "98", "83", "84"],
     dominios: ["gmail.com", "hotmail.com", "yahoo.com.br", "outlook.com", "teste.com.br"],
+    empresaSufixos: ["Tecnologia", "Soluções", "Sistemas", "Consultoria", "Comércio", "Serviços", "Digital", "Logística"],
+    empresaTipos: ["LTDA", "ME", "EPP", "S.A."],
     bandeiras: [
       { nome: "Visa", prefix: "4", length: 16 },
       { nome: "Mastercard", prefix: "5", length: 16 },
@@ -81,6 +83,8 @@
   function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function onlyDigits(s) { return (s || "").replace(/\D/g, ""); }
+  function stripAccents(s) { return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  function slugify(s) { return stripAccents(s).toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 28); }
 
   // ─── GERADORES ────────────────────────────────────────────────────────────
 
@@ -91,6 +95,10 @@
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/\s+/g, ".").replace(/[^a-z.]/g, "");
     return n + randInt(1, 99) + "@" + rand(DATA.dominios);
+  }
+
+  function gerarEmailEmpresa(dominio, prefixo) {
+    return (prefixo || rand(["contato", "comercial", "atendimento"])) + "@" + dominio;
   }
 
   // Gera os dígitos do celular uma só vez, retorna objeto com todas as variantes
@@ -187,6 +195,62 @@
       cvv: [cvv],
       nome: [nome],
     };
+  }
+
+  function gerarPessoaContext() {
+    const nome = gerarNome();
+    const partes = nome.split(" ");
+    const primeiroNome = partes[0];
+    const sobrenome = partes.slice(1).join(" ");
+    const telefoneVariants = gerarCelularVariants();
+    return {
+      nome: nome,
+      primeiroNome: primeiroNome,
+      sobrenome: sobrenome,
+      email: gerarEmail(nome),
+      telefone: telefoneVariants[0],
+      telefoneVariants: telefoneVariants,
+      cpfVariants: gerarCPFVariants(),
+      nascimentoVariants: gerarDataVariants(),
+    };
+  }
+
+  function gerarEmpresaContext(pessoa) {
+    const marca = pessoa.sobrenome.split(" ")[0] || rand(DATA.sobrenomes);
+    const segmento = rand(DATA.empresaSufixos);
+    const nomeFantasia = marca + " " + segmento;
+    const razaoSocial = nomeFantasia + " " + rand(DATA.empresaTipos);
+    const dominio = slugify(nomeFantasia) + ".com.br";
+    const telefoneVariants = gerarCelularVariants();
+    return {
+      razaoSocial: razaoSocial,
+      nomeFantasia: nomeFantasia,
+      dominio: dominio,
+      email: gerarEmailEmpresa(dominio),
+      telefone: telefoneVariants[0],
+      telefoneVariants: telefoneVariants,
+      cnpjVariants: gerarCNPJVariants(),
+      responsavel: pessoa.nome,
+      cargo: rand(["Analista de Sistemas", "Gerente Comercial", "Coordenador Administrativo", "Diretor de Operações", "Representante Legal"]),
+    };
+  }
+
+  async function gerarEnderecoContext(hasCepField) {
+    if (hasCepField && SETTINGS.useBrasilAPI) {
+      showToast("Buscando CEP...", 3000);
+      return await buscarCepReal();
+    }
+
+    const estado = rand(DATA.estados);
+    return {
+      cep: randInt(10000, 99999) + "-" + randInt(100, 999),
+      logradouro: rand(DATA.ruas), bairro: rand(DATA.bairros),
+      cidade: rand(DATA.cidades), estado: estado.uf, fromApi: false,
+    };
+  }
+
+  function gerarPagamentoContext(pessoa) {
+    return gerarCartaoVariants(pessoa.nome);
   }
 
   // ─── CEP REAL via BrasilAPI ───────────────────────────────────────────────
