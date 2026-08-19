@@ -62,6 +62,8 @@
     useBrasilAPI: true
   };
 
+  let lastContextMenuEditable = null;
+
   chrome.storage.local.get(["floatVisible", "shortcut", "customCategories", "useBrasilAPI"], (data) => {
     if (data.floatVisible !== undefined) SETTINGS.floatVisible = data.floatVisible;
     if (data.useBrasilAPI !== undefined) SETTINGS.useBrasilAPI = data.useBrasilAPI;
@@ -415,6 +417,89 @@
     el.dispatchEvent(new Event("change", { bubbles: true }));
     el.dispatchEvent(new Event("blur", { bubbles: true }));
     el.dispatchEvent(new Event("focusout", { bubbles: true }));
+  }
+
+  function dispatchEditableEvents(el) {
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    el.dispatchEvent(new Event("blur", { bubbles: true }));
+    el.dispatchEvent(new Event("focusout", { bubbles: true }));
+  }
+
+  function isEditableElement(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+    if (el.isContentEditable) return true;
+    if (el.tagName === "TEXTAREA") return !el.disabled && !el.readOnly;
+    if (el.tagName !== "INPUT") return false;
+
+    const type = (el.type || "text").toLowerCase();
+    const textTypes = [
+      "text", "search", "url", "tel", "email", "password", "number",
+      "date", "datetime-local", "month", "time", "week"
+    ];
+    return textTypes.includes(type) && !el.disabled && !el.readOnly;
+  }
+
+  function getEditableRoot(el) {
+    if (!isEditableElement(el)) return null;
+    if (!el.isContentEditable || el.tagName === "INPUT" || el.tagName === "TEXTAREA") return el;
+
+    let root = el;
+    while (root.parentElement && root.parentElement.isContentEditable) {
+      root = root.parentElement;
+    }
+    return root;
+  }
+
+  function getEditableFromEvent(event) {
+    const path = typeof event.composedPath === "function" ? event.composedPath() : [];
+    for (const node of path) {
+      const root = getEditableRoot(node);
+      if (root) return root;
+      if (node && node.nodeType === Node.ELEMENT_NODE) {
+        const editableParent = node.closest && node.closest("[contenteditable=''], [contenteditable='true'], [contenteditable='plaintext-only']");
+        const parentRoot = getEditableRoot(editableParent);
+        if (parentRoot) return parentRoot;
+      }
+    }
+
+    const target = event.target;
+    const targetRoot = getEditableRoot(target);
+    if (targetRoot) return targetRoot;
+    const closest = target && target.closest
+      ? target.closest("input, textarea, [contenteditable=''], [contenteditable='true'], [contenteditable='plaintext-only']")
+      : null;
+    return getEditableRoot(closest);
+  }
+
+  function getCurrentEditable() {
+    const lastRoot = getEditableRoot(lastContextMenuEditable);
+    if (lastRoot && document.contains(lastRoot)) {
+      return lastRoot;
+    }
+
+    const activeRoot = getEditableRoot(document.activeElement);
+    if (activeRoot) return activeRoot;
+    return null;
+  }
+
+  function fillSingleEditable(el, value) {
+    if (!el || value === null || value === undefined) return false;
+
+    try {
+      el.focus({ preventScroll: true });
+    } catch (_) {
+      el.focus();
+    }
+
+    if (el.isContentEditable) {
+      el.textContent = String(value);
+      dispatchEditableEvents(el);
+      return true;
+    }
+
+    dispatchEvents(el, String(value));
+    return true;
   }
 
   function isVisible(el) {
@@ -832,6 +917,67 @@
   window.__mockFillerSetShortcut = function (shortcut) {
     SETTINGS.shortcut = shortcut;
   };
+
+  async function generateContextMenuValue(dataType) {
+    const pessoa = gerarPessoaContext();
+    const empresa = gerarEmpresaContext(pessoa);
+
+    switch (dataType) {
+      case "nome":
+        return pessoa.nome;
+      case "email":
+        return pessoa.email;
+      case "telefone":
+        return pessoa.telefone;
+      case "cpf":
+        return pessoa.cpfVariants[0];
+      case "cnpj":
+        return empresa.cnpjVariants[0];
+      case "cep": {
+        const endereco = await gerarEnderecoContext(true);
+        return gerarCEPVariants(endereco.cep)[0];
+      }
+      case "empresa":
+        return empresa.nomeFantasia;
+      case "cartao":
+        return gerarPagamentoContext(pessoa).numero[0];
+      default:
+        return null;
+    }
+  }
+
+  document.addEventListener("contextmenu", function (event) {
+    const editable = getEditableFromEvent(event);
+    if (isEditableElement(editable)) lastContextMenuEditable = editable;
+  }, true);
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (!message || message.action !== "fillContextMenuField") return false;
+
+    (async () => {
+      const el = getCurrentEditable();
+      if (!el) {
+        showToast("Nenhum campo editável selecionado.");
+        sendResponse({ ok: false, error: "NO_EDITABLE_FIELD" });
+        return;
+      }
+
+      const value = await generateContextMenuValue(message.dataType);
+      if (!value) {
+        sendResponse({ ok: false, error: "UNKNOWN_DATA_TYPE" });
+        return;
+      }
+
+      fillSingleEditable(el, value);
+      showToast("Campo preenchido.");
+      sendResponse({ ok: true });
+    })().catch((error) => {
+      showToast("Erro: " + error.message);
+      sendResponse({ ok: false, error: error.message });
+    });
+
+    return true;
+  });
 
   // ─── ATALHO DE TECLADO ────────────────────────────────────────────────────
 
