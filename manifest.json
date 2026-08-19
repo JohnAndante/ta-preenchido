@@ -5,6 +5,7 @@
   "description": "Preenche formulários com dados brasileiros mocados para testes de desenvolvimento.",
   "permissions": [
     "activeTab",
+    "contextMenus",
     "scripting",
     "storage"
   ],

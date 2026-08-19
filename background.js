@@ -37,7 +37,40 @@ const DEFAULT_CATEGORIES = [
   }
 ];
 
+const CONTEXT_MENU_ROOT_ID = "ta-preenchido-root";
+const CONTEXT_MENU_ITEMS = [
+  { id: "ta-preenchido-nome", title: "Nome", dataType: "nome" },
+  { id: "ta-preenchido-email", title: "E-mail", dataType: "email" },
+  { id: "ta-preenchido-telefone", title: "Telefone", dataType: "telefone" },
+  { id: "ta-preenchido-cpf", title: "CPF", dataType: "cpf" },
+  { id: "ta-preenchido-cnpj", title: "CNPJ", dataType: "cnpj" },
+  { id: "ta-preenchido-cep", title: "CEP", dataType: "cep" },
+  { id: "ta-preenchido-empresa", title: "Empresa", dataType: "empresa" },
+  { id: "ta-preenchido-cartao", title: "Cartão", dataType: "cartao" }
+];
+
+function createContextMenus() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_ROOT_ID,
+      title: "Tá Preenchido",
+      contexts: ["editable"]
+    });
+
+    CONTEXT_MENU_ITEMS.forEach((item) => {
+      chrome.contextMenus.create({
+        id: item.id,
+        parentId: CONTEXT_MENU_ROOT_ID,
+        title: item.title,
+        contexts: ["editable"]
+      });
+    });
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
+  createContextMenus();
+
   chrome.storage.local.get(["customCategories"], (data) => {
     if (!data.customCategories || data.customCategories.length === 0) {
       chrome.storage.local.set({ customCategories: DEFAULT_CATEGORIES });
@@ -57,6 +90,23 @@ chrome.commands.onCommand.addListener((command) => {
         });
       }
     });
+  }
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  const item = CONTEXT_MENU_ITEMS.find((entry) => entry.id === info.menuItemId);
+  if (!item || !tab || !tab.id) return;
+
+  const message = { action: "fillContextMenuField", dataType: item.dataType };
+  const callback = () => {
+    // Algumas páginas restritas não aceitam content scripts. Silencia o erro esperado.
+    void chrome.runtime.lastError;
+  };
+
+  if (Number.isInteger(info.frameId)) {
+    chrome.tabs.sendMessage(tab.id, message, { frameId: info.frameId }, callback);
+  } else {
+    chrome.tabs.sendMessage(tab.id, message, callback);
   }
 });
 
