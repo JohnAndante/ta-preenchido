@@ -239,6 +239,13 @@
           <label>Usuário <input name="username" placeholder="login do usuário" /></label>
           <label>Telefone <input type="tel" name="telefone" placeholder="(11) 99999-9999" /></label>
           <label>CPF <input name="cpf" pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" /></label>
+          <label>Tipo de documento
+            <select name="tipoDocumentoPessoa">
+              <option value="0">Selecione...</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="cpf">CPF</option>
+            </select>
+          </label>
           <label>RG <input name="identidade" /></label>
           <label>Data de nascimento <input name="data_nasc" placeholder="DD/MM/AAAA" /></label>
           <label>Input date <input type="date" name="birthDate" /></label>
@@ -338,8 +345,8 @@
     <section class="panel" id="selects">
       <form class="card">
         <h2>Selects nativos</h2>
-        <p>Parte disso é da próxima issue, mas já dá para ver o comportamento atual.</p>
-        <div class="trap">Esperado agora: país/estado tentam opção coerente; selects genéricos ainda podem cair em opção aleatória. Melhorias finas virão na issue de selects.</div>
+        <p>Casos para validar seleção inteligente de opções nativas.</p>
+        <div class="expected">Esperado: selects devem evitar placeholders, escolher país Brasil, tentar UF/estado/cidade coerentes e preencher tipo de pessoa, documento, bandeira, estado civil e cargo por aliases.</div>
         <div class="grid">
           <label>Estado
             <select name="estado">
@@ -353,6 +360,7 @@
           <label>UF
             <select name="uf">
               <option value="">Selecione...</option>
+              <option value="ES">ES</option>
               <option value="SP">SP</option>
               <option value="RJ">RJ</option>
               <option value="MG">MG</option>
@@ -361,7 +369,8 @@
           </label>
           <label>País
             <select name="country">
-              <option value="">Choose...</option>
+              <option value="0">Choose...</option>
+              <option value="GB">British Indian Ocean Territory</option>
               <option value="BR">Brasil</option>
               <option value="US">Estados Unidos</option>
               <option value="AR">Argentina</option>
@@ -370,8 +379,8 @@
           <label>Tipo de pessoa
             <select name="tipoPessoa">
               <option value="">Selecione...</option>
-              <option value="pf">Pessoa Física</option>
               <option value="pj">Pessoa Jurídica</option>
+              <option value="pf">Pessoa Física</option>
             </select>
           </label>
           <label>Documento
@@ -388,6 +397,32 @@
               <option value="mastercard">Mastercard</option>
               <option value="amex">Amex</option>
               <option value="diners">Diners Club</option>
+            </select>
+          </label>
+          <label>Cidade
+            <select name="cidade">
+              <option value="">Selecione...</option>
+              <option value="sao-paulo">São Paulo</option>
+              <option value="rio-de-janeiro">Rio de Janeiro</option>
+              <option value="curitiba">Curitiba</option>
+              <option value="belo-horizonte">Belo Horizonte</option>
+            </select>
+          </label>
+          <label>Estado civil
+            <select name="estadoCivil">
+              <option value="">Selecione...</option>
+              <option value="single">Solteiro(a)</option>
+              <option value="married">Casado(a)</option>
+              <option value="divorced">Divorciado(a)</option>
+            </select>
+          </label>
+          <label>Cargo
+            <select name="cargo">
+              <option value="">Selecione...</option>
+              <option value="analyst">Analista</option>
+              <option value="manager">Gerente</option>
+              <option value="coordinator">Coordenador</option>
+              <option value="director">Diretor</option>
             </select>
           </label>
         </div>
