@@ -2,6 +2,15 @@
 
 <!-- O histórico de versões do Tá Preenchido. -->
 
+## [UNRELEASED]
+
+### Adicionado
+
+* [#3](https://github.com/JohnAndante/ta-preenchido/issues/3) - Organizar padrões de contribuição do projeto
+  * Adicionado `CONTRIBUTING.md`, cobrindo sagas, subissues, branches, commits, PRs, changelog e empacotamento para publicação.
+  * Ajustado o template de feature request para aplicar `enhancement`, `type: feature`, assignee padrão e lembretes de changelog/Development.
+  * Atualizado o template de pull request para referenciar issue relacionada e o guia de contribuição.
+
 ## [1.3.0] - Março de 2026
 
 Essa versão chegou com uma das atualizações mais pesadas pro núcleo da extensão. O *Tá Preenchido* ficou bem mais inteligente pra entender formulários complexos e menos invasivo com as páginas e as regras do Google.
