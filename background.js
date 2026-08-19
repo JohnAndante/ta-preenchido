@@ -39,14 +39,14 @@ const DEFAULT_CATEGORIES = [
 
 const CONTEXT_MENU_ROOT_ID = "ta-preenchido-root";
 const CONTEXT_MENU_ITEMS = [
-  { id: "ta-preenchido-nome", title: "Nome", dataType: "nome" },
-  { id: "ta-preenchido-email", title: "E-mail", dataType: "email" },
-  { id: "ta-preenchido-telefone", title: "Telefone", dataType: "telefone" },
-  { id: "ta-preenchido-cpf", title: "CPF", dataType: "cpf" },
-  { id: "ta-preenchido-cnpj", title: "CNPJ", dataType: "cnpj" },
-  { id: "ta-preenchido-cep", title: "CEP", dataType: "cep" },
-  { id: "ta-preenchido-empresa", title: "Empresa", dataType: "empresa" },
-  { id: "ta-preenchido-cartao", title: "Cartão", dataType: "cartao" }
+  { id: "ta-preenchido-nome", title: "Preencher nome", dataType: "nome" },
+  { id: "ta-preenchido-email", title: "Preencher e-mail", dataType: "email" },
+  { id: "ta-preenchido-telefone", title: "Preencher telefone", dataType: "telefone" },
+  { id: "ta-preenchido-cpf", title: "Preencher CPF", dataType: "cpf" },
+  { id: "ta-preenchido-cnpj", title: "Preencher CNPJ", dataType: "cnpj" },
+  { id: "ta-preenchido-cep", title: "Preencher CEP", dataType: "cep" },
+  { id: "ta-preenchido-empresa", title: "Preencher empresa", dataType: "empresa" },
+  { id: "ta-preenchido-cartao", title: "Preencher cartão", dataType: "cartao" }
 ];
 const DEFAULT_CONTEXT_MENU_ACTIONS = CONTEXT_MENU_ITEMS.map(item => item.dataType);
 
