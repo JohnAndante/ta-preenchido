@@ -120,9 +120,22 @@ Todo PR deve usar `.github/pull_request_template.md`.
 
 PR de subissue deve apontar para a branch da saga, não direto para `main`. A branch da saga funciona como uma main temporária enquanto a iniciativa ainda está em andamento.
 
+O título do PR deve seguir o mesmo assunto da issue:
+
+```txt
+#[numero-issue] - [descricao-da-issue-ou-resumo-direto]
+```
+
+Exemplo:
+
+```txt
+#4 - Criar geração contextual coerente de pessoa empresa endereço e pagamento
+```
+
 Checklist antes de abrir PR:
 
 - [ ] o PR aponta para a branch correta;
+- [ ] o título do PR segue `#numero - descrição`;
 - [ ] o campo **Related Issue** usa `Closes #numero` quando aplicável;
 - [ ] a descrição explica o que mudou;
 - [ ] a motivação está clara;
