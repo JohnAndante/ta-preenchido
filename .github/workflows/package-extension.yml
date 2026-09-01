@@ -1,0 +1,26 @@
+name: Gerar pacote da extensão
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    name: Gerar ZIP para Chrome Web Store
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+
+      - name: Gerar pacote
+        run: bash scripts/package-extension.sh
+
+      - name: Publicar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ta-preenchido-extension-zip
+          path: dist/*.zip
+          if-no-files-found: error
