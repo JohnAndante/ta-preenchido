@@ -2,6 +2,48 @@
 
 <!-- O histórico de versões do Tá Preenchido. -->
 
+## [2.0.0] - Setembro de 2026
+
+Saga [#2](https://github.com/JohnAndante/ta-preenchido/issues/2): o *Tá Preenchido* deixa de ser só um preenchedor campo-a-campo e passa a gerar dados brasileiros coerentes por contexto, com múltiplos pontos de entrada rápidos e um fluxo de contribuição documentado.
+
+### Adicionado
+
+* [#3](https://github.com/JohnAndante/ta-preenchido/issues/3) - Organizar padrões de contribuição do projeto
+  * Adicionado `CONTRIBUTING.md`, cobrindo sagas, subissues, branches, commits, PRs, changelog e empacotamento para publicação.
+  * Ajustado o template de feature request para aplicar `enhancement`, `type: feature`, assignee padrão e lembretes de changelog/Development.
+  * Atualizado o template de pull request para referenciar issue relacionada e o guia de contribuição.
+* [#4](https://github.com/JohnAndante/ta-preenchido/issues/4) - Criar geração contextual coerente de pessoa empresa endereço e pagamento
+  * Adicionado contexto central de preenchimento com pessoa, empresa, endereço e pagamento gerados uma vez por execução.
+  * Dados de empresa passam a compartilhar razão social, nome fantasia, domínio, e-mail, telefone, CNPJ, responsável e cargo coerentes.
+  * Dados de pagamento passam a usar o titular alinhado com a pessoa gerada no contexto.
+  * O preenchimento agora escolhe e-mail, telefone e nome de pessoa ou empresa de acordo com o contexto detectado no formulário.
+  * Adicionada página local `manual-test/contextual-form-lab.html` para validar pessoa, empresa, misto B2B, cartão, endereço, selects, naming e casos de falha.
+  * Documentado em `CONTRIBUTING.md` o padrão de título de PR `#numero - descrição`.
+* [#5](https://github.com/JohnAndante/ta-preenchido/issues/5) - Transformar popup em gerador rápido one click
+  * Substituídos os chips estáticos do popup por botões one-click para CPF, CNPJ, nome, e-mail, telefone, empresa, endereço e cartão.
+  * Adicionada cópia automática para dados rápidos, com feedback visual no próprio botão.
+  * Cartão passa a ter ações separadas para copiar apenas o número ou o pacote completo.
+  * Adicionada configuração na página de Opções para escolher quais botões aparecem no acesso rápido do popup.
+  * Atualizada a versão exibida no footer do popup para `v2.0.0`.
+* [#6](https://github.com/JohnAndante/ta-preenchido/issues/6) - Adicionar menu de contexto para preencher campo específico
+  * Adicionado menu de contexto `Tá Preenchido` para campos editáveis, com opções de nome, e-mail, telefone, CPF, CNPJ, CEP, empresa e cartão.
+  * Adicionada configuração na página de Opções para escolher quais itens aparecem no menu de contexto.
+  * O content script passa a rastrear o último campo editável clicado com botão direito e preencher apenas esse campo.
+  * O background envia o comando para o frame correto quando o Chrome informa `frameId`.
+* [#7](https://github.com/JohnAndante/ta-preenchido/issues/7) - Melhorar seleção inteligente de selects nativos
+  * Adicionado helper reutilizável para escolher options por texto, value, aliases e fallback seguro.
+  * Selects passam a escolher tipo de pessoa, documento, bandeira de cartão, estado civil, cargo, estado, cidade e país com base no contexto do formulário.
+  * Placeholders como `Selecione...` e `Choose...` deixam de ser escolhidos como fallback.
+  * Atualizado o laboratório manual com novos cenários de selects nativos.
+* [#8](https://github.com/JohnAndante/ta-preenchido/issues/8) - Criar painel flutuante com ações rápidas na página
+  * O botão flutuante passa a abrir um painel discreto com ações rápidas dentro da própria página.
+  * Adicionadas ações para preencher o formulário e copiar CPF, CNPJ, nome, empresa, endereço e cartão.
+  * O painel respeita a configuração de ocultar botão flutuante e fecha por botão, clique fora ou tecla `Escape`.
+* [#9](https://github.com/JohnAndante/ta-preenchido/issues/9) - Adicionar empacotamento zip para Chrome Web Store
+  * Adicionado script local para gerar ZIP de release contendo apenas os arquivos necessários da extensão.
+  * Adicionada workflow manual e por tags para publicar o ZIP como artifact no GitHub Actions.
+  * Documentado no README como gerar o pacote localmente.
+
 ## [1.3.0] - Março de 2026
 
 Essa versão chegou com uma das atualizações mais pesadas pro núcleo da extensão. O *Tá Preenchido* ficou bem mais inteligente pra entender formulários complexos e menos invasivo com as páginas e as regras do Google.
@@ -34,7 +76,7 @@ Neste ciclo, decidi focar na limpeza da casa. A interface tava bem carregada e c
 
 ### O que mudou
 
-- Refatoração do `popup.html`. Cortei a paleta vibrante e os emojis desnecessários pra deixar mais clean e com pegada de developer tools. 
+- Refatoração do `popup.html`. Cortei a paleta vibrante e os emojis desnecessários pra deixar mais clean e com pegada de developer tools.
 - O arquivo `content.js` parou de rodar com dados fixos apenas e agora mescla os padrões da extensão com o que você salvar lá na página de Opções.
 
 ### O que corrigiu

@@ -162,42 +162,95 @@
       transform: translateX(16px);
     }
 
-    /* ── Status / chips ── */
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
+    /* ── Quick generator ── */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
     }
 
-    .chip {
+    .quick-grid.empty {
+      display: block;
+      color: #6c7086;
+      font-size: 12px;
+      padding: 10px;
+      border: 1px dashed #313244;
+      border-radius: 8px;
+    }
+
+    .quick-btn {
       background: #1e1e2e;
       border: 1px solid #313244;
-      border-radius: 20px;
-      padding: 3px 9px;
-      font-size: 11px;
-      color: #a6adc8;
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 8px 9px;
+      color: #cdd6f4;
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: flex-start;
+      gap: 7px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
     }
 
-    .chip .dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #a6e3a1;
+    .quick-btn:hover,
+    .quick-btn:focus-visible {
+      border-color: #89b4fa;
+      background: #242438;
+      outline: 2px solid rgba(137, 180, 250, 0.75);
+      outline-offset: 2px;
+    }
+
+    .quick-btn:active {
+      transform: translateY(1px);
+    }
+
+    .quick-btn.copied {
+      border-color: #a6e3a1;
+      color: #a6e3a1;
+    }
+
+    .quick-icon {
+      width: 18px;
+      text-align: center;
+      color: #89b4fa;
+      font-weight: 800;
     }
 
     .status {
       background: #1e1e2e;
+      border: 1px solid transparent;
       border-radius: 8px;
       padding: 10px 12px;
       font-size: 12px;
       color: #a6adc8;
       min-height: 36px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .status:empty {
+      display: none;
+    }
+
+    .status strong {
+      color: #cdd6f4;
+    }
+
+    .status .muted {
+      color: #6c7086;
+      font-size: 11px;
+    }
+
+    .status.success {
+      border-color: rgba(166, 227, 161, 0.45);
+    }
+
+    .status.error {
+      border-color: rgba(243, 139, 168, 0.55);
+      color: #f38ba8;
     }
 
     .footer {
@@ -224,21 +277,44 @@
       background: #313244;
       color: #cdd6f4;
     }
+
+    .btn-options.full {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #181825;
+    }
+
+    button:focus-visible {
+      outline: 2px solid #89b4fa;
+      outline-offset: 2px;
+    }
   </style>
 </head>
 
 <body>
-  <div class="header">
-    <div class="header-text">
-      <h1>Tá Preenchido</h1>
-      <p>Dados brasileiros para testes</p>
+    <div class="header">
+      <div class="header-text">
+        <h1>Tá Preenchido</h1>
+        <p>Gere dados brasileiros em 1 clique</p>
+      </div>
     </div>
-  </div>
 
   <div class="body">
 
     <!-- Botão principal -->
     <button class="btn-fill" id="fillBtn">Preencher formulário</button>
+
+    <hr class="divider" />
+
+    <!-- Gerador rápido -->
+    <div>
+      <p class="section-title">
+        Copiar dado rápido
+      </p>
+      <div class="quick-grid" id="quickGrid"></div>
+    </div>
 
     <hr class="divider" />
 
@@ -248,44 +324,22 @@
       <div class="setting-row">
         <div>
           <div class="label">Botão flutuante</div>
-          <div class="sub">Exibe o botão de preenchimento na página</div>
+          <div class="sub">Mostra o atalho dentro da página</div>
         </div>
         <label class="toggle">
-          <input type="checkbox" id="toggleFloat" checked />
+          <input type="checkbox" id="toggleFloat" aria-label="Botão flutuante" checked />
           <span class="slider"></span>
         </label>
       </div>
     </div>
 
-    <hr class="divider" />
+    <div class="status" id="status" aria-live="polite"></div>
 
-    <!-- Dados incluídos -->
-    <div>
-      <p class="section-title">
-        Dados ativos
-        <button class="btn-options" id="optionsBtn">Personalizar</button>
-      </p>
-      <div class="chips">
-        <div class="chip"><span class="dot"></span>Nome</div>
-        <div class="chip"><span class="dot"></span>E-mail</div>
-        <div class="chip"><span class="dot"></span>Telefone</div>
-        <div class="chip"><span class="dot"></span>CPF</div>
-        <div class="chip"><span class="dot"></span>CNPJ</div>
-        <div class="chip"><span class="dot"></span>Endereço</div>
-        <div class="chip"><span class="dot"></span>CEP real</div>
-        <div class="chip"><span class="dot"></span>Cartão</div>
-        <div class="chip"><span class="dot"></span>Data nasc.</div>
-        <div class="chip"><span class="dot"></span>Senha</div>
-      </div>
-    </div>
-
-    <div class="status" id="status">
-      Pronto para uso. Pressione o botão ou utilize o atalho.
-    </div>
+    <button class="btn-options full" id="optionsBtn">Configurações</button>
 
   </div>
 
-  <div class="footer">Tá Preenchido v1.2</div>
+  <div class="footer">Tá Preenchido v2.0.0</div>
 
   <script src="popup.js"></script>
 </body>
