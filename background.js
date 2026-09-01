@@ -37,7 +37,53 @@ const DEFAULT_CATEGORIES = [
   }
 ];
 
+const CONTEXT_MENU_ROOT_ID = "ta-preenchido-root";
+const CONTEXT_MENU_ITEMS = [
+  { id: "ta-preenchido-nome", title: "Preencher nome", dataType: "nome" },
+  { id: "ta-preenchido-email", title: "Preencher e-mail", dataType: "email" },
+  { id: "ta-preenchido-telefone", title: "Preencher telefone", dataType: "telefone" },
+  { id: "ta-preenchido-cpf", title: "Preencher CPF", dataType: "cpf" },
+  { id: "ta-preenchido-cnpj", title: "Preencher CNPJ", dataType: "cnpj" },
+  { id: "ta-preenchido-cep", title: "Preencher CEP", dataType: "cep" },
+  { id: "ta-preenchido-empresa", title: "Preencher empresa", dataType: "empresa" },
+  { id: "ta-preenchido-cartao", title: "Preencher cartão", dataType: "cartao" }
+];
+const DEFAULT_CONTEXT_MENU_ACTIONS = CONTEXT_MENU_ITEMS.map(item => item.dataType);
+
+function createContextMenus(enabledActions) {
+  const activeActions = Array.isArray(enabledActions)
+    ? enabledActions.filter(action => DEFAULT_CONTEXT_MENU_ACTIONS.includes(action))
+    : DEFAULT_CONTEXT_MENU_ACTIONS;
+
+  chrome.contextMenus.removeAll(() => {
+    if (activeActions.length === 0) return;
+
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_ROOT_ID,
+      title: "Tá Preenchido",
+      contexts: ["editable"]
+    });
+
+    CONTEXT_MENU_ITEMS.filter(item => activeActions.includes(item.dataType)).forEach((item) => {
+      chrome.contextMenus.create({
+        id: item.id,
+        parentId: CONTEXT_MENU_ROOT_ID,
+        title: item.title,
+        contexts: ["editable"]
+      });
+    });
+  });
+}
+
+function refreshContextMenus() {
+  chrome.storage.local.get(["contextMenuActions"], (data) => {
+    createContextMenus(data.contextMenuActions);
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
+  refreshContextMenus();
+
   chrome.storage.local.get(["customCategories"], (data) => {
     if (!data.customCategories || data.customCategories.length === 0) {
       chrome.storage.local.set({ customCategories: DEFAULT_CATEGORIES });
@@ -57,6 +103,33 @@ chrome.commands.onCommand.addListener((command) => {
         });
       }
     });
+  }
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  refreshContextMenus();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === "local" && changes.contextMenuActions) {
+    createContextMenus(changes.contextMenuActions.newValue);
+  }
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  const item = CONTEXT_MENU_ITEMS.find((entry) => entry.id === info.menuItemId);
+  if (!item || !tab || !tab.id) return;
+
+  const message = { action: "fillContextMenuField", dataType: item.dataType };
+  const callback = () => {
+    // Algumas páginas restritas não aceitam content scripts. Silencia o erro esperado.
+    void chrome.runtime.lastError;
+  };
+
+  if (Number.isInteger(info.frameId)) {
+    chrome.tabs.sendMessage(tab.id, message, { frameId: info.frameId }, callback);
+  } else {
+    chrome.tabs.sendMessage(tab.id, message, callback);
   }
 });
 

@@ -6,7 +6,8 @@ Uma extensão de Chrome pra preencher formulários web automaticamente com dados
 
 ## O que a extensão faz
 
-- Bate o olho nos inputs (`name`, `id`, `placeholder`) e deduz o que precisa entrar lá.
+- Bate o olho nos inputs (`name`, `id`, `placeholder`) e deduz o que precisa entrar lá, inclusive em `select`s nativos.
+- Gera pessoa, empresa, endereço e pagamento de forma **coerente** por execução: o CNPJ, a razão social, o e-mail e o responsável da empresa batem entre si, e o nome do cartão bate com o da pessoa gerada.
 - Gera CPFs, CNPJs e cartões de crédito que passam nas validações de front-end.
 - Busca endereços reais a partir de CEP via [BrasilAPI](https://brasilapi.com.br/).
 - Dá a liberdade de criar categorias customizadas na aba de Opções. Crie a palavra-chave (ex: `cargo`) e ele injeta um dos valores que você cadastrou.
@@ -21,6 +22,32 @@ Uma extensão de Chrome pra preencher formulários web automaticamente com dados
 
 ## Como utilizar
 
+### Preencher a página inteira
+
 Toda vez que uma página com inputs carregar, a extensão joga um botão discreto no canto pra você preencher tudo de uma vez. Dá também pra usar no teclado: manda um `Ctrl + Shift + F` que a mágica acontece.
 
-Se precisar alterar os atalhos ou botar palavras novas na roleta, clica no ícone da extensão lá no menu do navegador e vai em "Personalizar".
+Clicando no botão flutuante (sem soltar em preencher direto) você abre um **painel de ações rápidas** ali mesmo na página, com atalhos pra preencher o formulário ou copiar CPF, CNPJ, nome, empresa, endereço e cartão sem sair de onde você está.
+
+### Gerador rápido no popup
+
+Clica no ícone da extensão pra abrir o popup: lá tem botões one-click pra copiar CPF, CNPJ, nome, e-mail, telefone, empresa, endereço e cartão (número ou pacote completo) direto pra área de transferência, com feedback visual no próprio botão.
+
+### Menu de contexto por campo
+
+Clique com o botão direito em qualquer campo editável da página pra ver o menu **Tá Preenchido**, com opções pra preencher só aquele campo (nome, e-mail, telefone, CPF, CNPJ, CEP, empresa ou cartão).
+
+### Personalizando
+
+Se precisar alterar os atalhos, botar palavras novas na roleta de categorias customizadas, ou escolher quais botões aparecem no popup e no menu de contexto, clica no ícone da extensão lá no menu do navegador e vai em "Personalizar".
+
+## Gerar ZIP para Chrome Web Store
+
+Para gerar um pacote publicável localmente:
+
+```bash
+bash scripts/package-extension.sh
+```
+
+O arquivo sai em `dist/ta-preenchido-vX.Y.Z.zip`, com `manifest.json` na raiz e apenas os arquivos necessários da extensão.
+
+Também existe a workflow **Gerar pacote da extensão**, que pode ser executada manualmente no GitHub Actions ou por tags `v*`. Ela publica o ZIP como artifact.
