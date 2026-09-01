@@ -24,3 +24,15 @@ Uma extensão de Chrome pra preencher formulários web automaticamente com dados
 Toda vez que uma página com inputs carregar, a extensão joga um botão discreto no canto pra você preencher tudo de uma vez. Dá também pra usar no teclado: manda um `Ctrl + Shift + F` que a mágica acontece.
 
 Se precisar alterar os atalhos ou botar palavras novas na roleta, clica no ícone da extensão lá no menu do navegador e vai em "Personalizar".
+
+## Gerar ZIP para Chrome Web Store
+
+Para gerar um pacote publicável localmente:
+
+```bash
+bash scripts/package-extension.sh
+```
+
+O arquivo sai em `dist/ta-preenchido-vX.Y.Z.zip`, com `manifest.json` na raiz e apenas os arquivos necessários da extensão.
+
+Também existe a workflow **Gerar pacote da extensão**, que pode ser executada manualmente no GitHub Actions ou por tags `v*`. Ela publica o ZIP como artifact.
